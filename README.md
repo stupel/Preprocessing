@@ -16,7 +16,7 @@ Copy the 'core' folder to your root project directory
 Optional:  
 *void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)*  
   
-*void setFeatures(bool advancedMode, int numThreads, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)*  
+*void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)*  
   
 *void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth)*  
   
