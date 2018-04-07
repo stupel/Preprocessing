@@ -1,6 +1,7 @@
 # Qt
 *.user
 moc_*
+*.qmake.stash
 
 # Prerequisites
 *.d
