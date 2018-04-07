@@ -64,6 +64,11 @@ void OrientationMap::computeBasicMap()
     }
 }
 
+cv::Mat OrientationMap::getOMap_basic() const
+{
+    return oMap_basic;
+}
+
 void OrientationMap::computeAdvancedMap()
 {
     this->computeBasicMap();

@@ -18,7 +18,8 @@ SOURCES += preprocessing.cpp \
     frequencymap.cpp \
     caffenetwork.cpp \
     mask.cpp \
-    qualitymap.cpp
+    qualitymap.cpp \
+    gaborfiltergpu.cpp
 
 HEADERS += preprocessing.h\
         preprocessing_global.h \
@@ -34,7 +35,8 @@ HEADERS += preprocessing.h\
     mask.h \
     config.h \
     imagecontour.h \
-    qualitymap.h
+    qualitymap.h \
+    gaborfiltergpu.h
 
 unix {
     target.path = /usr/lib

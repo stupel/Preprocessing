@@ -28,9 +28,10 @@ public:
 
     //getNset
     cv::Mat getOMap_advanced() const;
+    cv::Mat getOMap_basic() const;
     cv::Mat getImgOMap_basic() const;
 
-private:  
+private:
 
     void computeBasicMap();
 

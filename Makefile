@@ -71,7 +71,8 @@ SOURCES       = preprocessing.cpp \
 		moc_frequencymap.cpp \
 		moc_caffenetwork.cpp \
 		moc_mask.cpp \
-		moc_qualitymap.cpp
+		moc_qualitymap.cpp \
+		moc_gaborfiltergpu.cpp
 OBJECTS       = preprocessing.o \
 		orientationmap.o \
 		thinning.o \
@@ -94,7 +95,8 @@ OBJECTS       = preprocessing.o \
 		moc_frequencymap.o \
 		moc_caffenetwork.o \
 		moc_mask.o \
-		moc_qualitymap.o
+		moc_qualitymap.o \
+		moc_gaborfiltergpu.o
 DIST          = /usr/lib/qt/mkspecs/features/spec_pre.prf \
 		/usr/lib/qt/mkspecs/common/unix.conf \
 		/usr/lib/qt/mkspecs/common/linux.conf \
@@ -614,9 +616,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/qt/mkspecs/features/data/dummy.cpp
 	g++ -pipe -g -std=gnu++11 -Wall -W -dM -E -o moc_predefs.h /usr/lib/qt/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_preprocessing.cpp moc_orientationmap.cpp moc_thinning.cpp moc_binarization.cpp moc_gaborfiltermultithread.cpp moc_gaborthread.cpp moc_contrastenhancement.cpp moc_frequencymap.cpp moc_caffenetwork.cpp moc_mask.cpp moc_qualitymap.cpp
+compiler_moc_header_make_all: moc_preprocessing.cpp moc_orientationmap.cpp moc_thinning.cpp moc_binarization.cpp moc_gaborfiltermultithread.cpp moc_gaborthread.cpp moc_contrastenhancement.cpp moc_frequencymap.cpp moc_caffenetwork.cpp moc_mask.cpp moc_qualitymap.cpp moc_gaborfiltergpu.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_preprocessing.cpp moc_orientationmap.cpp moc_thinning.cpp moc_binarization.cpp moc_gaborfiltermultithread.cpp moc_gaborthread.cpp moc_contrastenhancement.cpp moc_frequencymap.cpp moc_caffenetwork.cpp moc_mask.cpp moc_qualitymap.cpp
+	-$(DEL_FILE) moc_preprocessing.cpp moc_orientationmap.cpp moc_thinning.cpp moc_binarization.cpp moc_gaborfiltermultithread.cpp moc_gaborthread.cpp moc_contrastenhancement.cpp moc_frequencymap.cpp moc_caffenetwork.cpp moc_mask.cpp moc_qualitymap.cpp moc_gaborfiltergpu.cpp
 moc_preprocessing.cpp: preprocessing_global.h \
 		/usr/include/qt/QtCore/qglobal.h \
 		/usr/include/qt/QtCore/qconfig-bootstrapped.h \
@@ -1558,6 +1560,86 @@ moc_qualitymap.cpp: /usr/include/qt/QtCore/QObject \
 		/usr/bin/moc
 	/usr/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/qt/mkspecs/linux-g++ -I/home/stupel/Documents/QtProjects/Preprocessing -I/opt/cuda/include -I/usr/include/qt -I/usr/include/qt/QtGui -I/usr/include/qt/QtCore -I'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.12.25827\include' -I'C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt' qualitymap.h -o moc_qualitymap.cpp
 
+moc_gaborfiltergpu.cpp: /usr/include/qt/QtCore/QObject \
+		/usr/include/qt/QtCore/qobject.h \
+		/usr/include/qt/QtCore/qobjectdefs.h \
+		/usr/include/qt/QtCore/qnamespace.h \
+		/usr/include/qt/QtCore/qglobal.h \
+		/usr/include/qt/QtCore/qconfig-bootstrapped.h \
+		/usr/include/qt/QtCore/qconfig.h \
+		/usr/include/qt/QtCore/qtcore-config.h \
+		/usr/include/qt/QtCore/qsystemdetection.h \
+		/usr/include/qt/QtCore/qprocessordetection.h \
+		/usr/include/qt/QtCore/qcompilerdetection.h \
+		/usr/include/qt/QtCore/qtypeinfo.h \
+		/usr/include/qt/QtCore/qsysinfo.h \
+		/usr/include/qt/QtCore/qlogging.h \
+		/usr/include/qt/QtCore/qflags.h \
+		/usr/include/qt/QtCore/qatomic.h \
+		/usr/include/qt/QtCore/qbasicatomic.h \
+		/usr/include/qt/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt/QtCore/qgenericatomic.h \
+		/usr/include/qt/QtCore/qatomic_cxx11.h \
+		/usr/include/qt/QtCore/qatomic_msvc.h \
+		/usr/include/qt/QtCore/qglobalstatic.h \
+		/usr/include/qt/QtCore/qmutex.h \
+		/usr/include/qt/QtCore/qnumeric.h \
+		/usr/include/qt/QtCore/qversiontagging.h \
+		/usr/include/qt/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt/QtCore/qstring.h \
+		/usr/include/qt/QtCore/qchar.h \
+		/usr/include/qt/QtCore/qbytearray.h \
+		/usr/include/qt/QtCore/qrefcount.h \
+		/usr/include/qt/QtCore/qarraydata.h \
+		/usr/include/qt/QtCore/qstringliteral.h \
+		/usr/include/qt/QtCore/qstringalgorithms.h \
+		/usr/include/qt/QtCore/qstringview.h \
+		/usr/include/qt/QtCore/qstringbuilder.h \
+		/usr/include/qt/QtCore/qlist.h \
+		/usr/include/qt/QtCore/qalgorithms.h \
+		/usr/include/qt/QtCore/qiterator.h \
+		/usr/include/qt/QtCore/qhashfunctions.h \
+		/usr/include/qt/QtCore/qpair.h \
+		/usr/include/qt/QtCore/qbytearraylist.h \
+		/usr/include/qt/QtCore/qstringlist.h \
+		/usr/include/qt/QtCore/qregexp.h \
+		/usr/include/qt/QtCore/qstringmatcher.h \
+		/usr/include/qt/QtCore/qcoreevent.h \
+		/usr/include/qt/QtCore/qscopedpointer.h \
+		/usr/include/qt/QtCore/qmetatype.h \
+		/usr/include/qt/QtCore/qvarlengtharray.h \
+		/usr/include/qt/QtCore/qcontainerfwd.h \
+		/usr/include/qt/QtCore/qobject_impl.h \
+		helper.h \
+		/usr/include/qt/QtGui/QImage \
+		/usr/include/qt/QtGui/qimage.h \
+		/usr/include/qt/QtGui/qtguiglobal.h \
+		/usr/include/qt/QtGui/qtgui-config.h \
+		/usr/include/qt/QtGui/qcolor.h \
+		/usr/include/qt/QtGui/qrgb.h \
+		/usr/include/qt/QtGui/qrgba64.h \
+		/usr/include/qt/QtGui/qpaintdevice.h \
+		/usr/include/qt/QtGui/qwindowdefs.h \
+		/usr/include/qt/QtGui/qwindowdefs_win.h \
+		/usr/include/qt/QtCore/qrect.h \
+		/usr/include/qt/QtCore/qmargins.h \
+		/usr/include/qt/QtCore/qsize.h \
+		/usr/include/qt/QtCore/qpoint.h \
+		/usr/include/qt/QtGui/qpixelformat.h \
+		/usr/include/qt/QtGui/qtransform.h \
+		/usr/include/qt/QtGui/qmatrix.h \
+		/usr/include/qt/QtGui/qpolygon.h \
+		/usr/include/qt/QtCore/qvector.h \
+		/usr/include/qt/QtGui/qregion.h \
+		/usr/include/qt/QtCore/qdatastream.h \
+		/usr/include/qt/QtCore/qiodevice.h \
+		/usr/include/qt/QtCore/qline.h \
+		/usr/include/qt/QtGui/qpainterpath.h \
+		gaborfiltergpu.h \
+		moc_predefs.h \
+		/usr/bin/moc
+	/usr/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/qt/mkspecs/linux-g++ -I/home/stupel/Documents/QtProjects/Preprocessing -I/opt/cuda/include -I/usr/include/qt -I/usr/include/qt/QtGui -I/usr/include/qt/QtCore -I'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.12.25827\include' -I'C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um' -I'C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt' gaborfiltergpu.h -o moc_gaborfiltergpu.cpp
+
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
 compiler_moc_source_make_all:
@@ -2491,7 +2573,82 @@ qualitymap.o: qualitymap.cpp qualitymap.h \
 		/usr/include/qt/QtCore/QVector
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qualitymap.o qualitymap.cpp
 
-gaborfiltergpu.o: gaborfiltergpu.cpp gaborfiltergpu.h
+gaborfiltergpu.o: gaborfiltergpu.cpp gaborfiltergpu.h \
+		/usr/include/qt/QtCore/QObject \
+		/usr/include/qt/QtCore/qobject.h \
+		/usr/include/qt/QtCore/qobjectdefs.h \
+		/usr/include/qt/QtCore/qnamespace.h \
+		/usr/include/qt/QtCore/qglobal.h \
+		/usr/include/qt/QtCore/qconfig-bootstrapped.h \
+		/usr/include/qt/QtCore/qconfig.h \
+		/usr/include/qt/QtCore/qtcore-config.h \
+		/usr/include/qt/QtCore/qsystemdetection.h \
+		/usr/include/qt/QtCore/qprocessordetection.h \
+		/usr/include/qt/QtCore/qcompilerdetection.h \
+		/usr/include/qt/QtCore/qtypeinfo.h \
+		/usr/include/qt/QtCore/qsysinfo.h \
+		/usr/include/qt/QtCore/qlogging.h \
+		/usr/include/qt/QtCore/qflags.h \
+		/usr/include/qt/QtCore/qatomic.h \
+		/usr/include/qt/QtCore/qbasicatomic.h \
+		/usr/include/qt/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt/QtCore/qgenericatomic.h \
+		/usr/include/qt/QtCore/qatomic_cxx11.h \
+		/usr/include/qt/QtCore/qatomic_msvc.h \
+		/usr/include/qt/QtCore/qglobalstatic.h \
+		/usr/include/qt/QtCore/qmutex.h \
+		/usr/include/qt/QtCore/qnumeric.h \
+		/usr/include/qt/QtCore/qversiontagging.h \
+		/usr/include/qt/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt/QtCore/qstring.h \
+		/usr/include/qt/QtCore/qchar.h \
+		/usr/include/qt/QtCore/qbytearray.h \
+		/usr/include/qt/QtCore/qrefcount.h \
+		/usr/include/qt/QtCore/qarraydata.h \
+		/usr/include/qt/QtCore/qstringliteral.h \
+		/usr/include/qt/QtCore/qstringalgorithms.h \
+		/usr/include/qt/QtCore/qstringview.h \
+		/usr/include/qt/QtCore/qstringbuilder.h \
+		/usr/include/qt/QtCore/qlist.h \
+		/usr/include/qt/QtCore/qalgorithms.h \
+		/usr/include/qt/QtCore/qiterator.h \
+		/usr/include/qt/QtCore/qhashfunctions.h \
+		/usr/include/qt/QtCore/qpair.h \
+		/usr/include/qt/QtCore/qbytearraylist.h \
+		/usr/include/qt/QtCore/qstringlist.h \
+		/usr/include/qt/QtCore/qregexp.h \
+		/usr/include/qt/QtCore/qstringmatcher.h \
+		/usr/include/qt/QtCore/qcoreevent.h \
+		/usr/include/qt/QtCore/qscopedpointer.h \
+		/usr/include/qt/QtCore/qmetatype.h \
+		/usr/include/qt/QtCore/qvarlengtharray.h \
+		/usr/include/qt/QtCore/qcontainerfwd.h \
+		/usr/include/qt/QtCore/qobject_impl.h \
+		helper.h \
+		/usr/include/qt/QtGui/QImage \
+		/usr/include/qt/QtGui/qimage.h \
+		/usr/include/qt/QtGui/qtguiglobal.h \
+		/usr/include/qt/QtGui/qtgui-config.h \
+		/usr/include/qt/QtGui/qcolor.h \
+		/usr/include/qt/QtGui/qrgb.h \
+		/usr/include/qt/QtGui/qrgba64.h \
+		/usr/include/qt/QtGui/qpaintdevice.h \
+		/usr/include/qt/QtGui/qwindowdefs.h \
+		/usr/include/qt/QtGui/qwindowdefs_win.h \
+		/usr/include/qt/QtCore/qrect.h \
+		/usr/include/qt/QtCore/qmargins.h \
+		/usr/include/qt/QtCore/qsize.h \
+		/usr/include/qt/QtCore/qpoint.h \
+		/usr/include/qt/QtGui/qpixelformat.h \
+		/usr/include/qt/QtGui/qtransform.h \
+		/usr/include/qt/QtGui/qmatrix.h \
+		/usr/include/qt/QtGui/qpolygon.h \
+		/usr/include/qt/QtCore/qvector.h \
+		/usr/include/qt/QtGui/qregion.h \
+		/usr/include/qt/QtCore/qdatastream.h \
+		/usr/include/qt/QtCore/qiodevice.h \
+		/usr/include/qt/QtCore/qline.h \
+		/usr/include/qt/QtGui/qpainterpath.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gaborfiltergpu.o gaborfiltergpu.cpp
 
 moc_preprocessing.o: moc_preprocessing.cpp 
@@ -2526,6 +2683,9 @@ moc_mask.o: moc_mask.cpp
 
 moc_qualitymap.o: moc_qualitymap.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_qualitymap.o moc_qualitymap.cpp
+
+moc_gaborfiltergpu.o: moc_gaborfiltergpu.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_gaborfiltergpu.o moc_gaborfiltergpu.cpp
 
 ####### Install
 

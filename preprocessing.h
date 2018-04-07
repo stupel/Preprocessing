@@ -6,6 +6,7 @@
 
 #include "orientationmap.h"
 #include "gaborfiltermultithread.h"
+#include "gaborfiltergpu.h"
 #include "binarization.h"
 #include "contrastenhancement.h"
 #include "thinning.h"
@@ -79,7 +80,7 @@ public:
 
     void loadImg(cv::Mat imgInput);
     void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize);
-    void setFeatures(bool advancedMode, int numThreads, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap);
+    void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU = false, bool useContrastEnhancement = true, bool useRemoveHoles = true, bool useFixOrientations = true, bool useMask = false, bool useQualityMap = true, bool useFrequencyMap = false);
     void setFrequencyMapParams(const CAFFE_FILES &freqFiles, const int &blockSize, const int &exBlockSize);
     void setMaskParams(const CAFFE_FILES &maskFiles, const int &blockSize, const int &exBlockSize, const bool &useSmooth);
     void generateMask();
@@ -89,6 +90,7 @@ public:
 private:
     OrientationMap oMap;
     GaborFilterMultiThread gaborMultiThread; // objekt na paralelne filtrovanie odtlacku
+    GaborFilterGPU gaborGPU;
     Binarization binarization;
     Thinning thinning;
     ContrastEnhancement contrast;
@@ -110,6 +112,7 @@ private:
     int numThreads;
     int holeSize;
 
+    bool useGaborFilterGPU;
     bool useContrastEnhancement;
     bool useRemoveHoles;
     bool useFrequencyMap;
@@ -133,9 +136,7 @@ private:
     int maskExBlockSize;
     bool maskUseSmooth;
 
-    void contrastEnhancement(cv::Mat& toEnhance, int distance, double sigma, double gaussBlock, double gaussSigma);
-    void performSUACE(cv::Mat & src, cv::Mat & dst, int distance, double sigma);
-    void removeHoles(cv::Mat& binarizedImg,  double holeSize);
+    void continueAfterGabor();
     int preprocessingError(int errorcode);
     void clean();
 
