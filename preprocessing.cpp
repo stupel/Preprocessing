@@ -194,7 +194,7 @@ void Preprocessing::run()
 
         if (this->useGaborFilterGPU) {
             if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda);
-            else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_advanced(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda);
+            else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda);
 
             this->timer.start();
             this->gaborGPU.enhance();
@@ -204,8 +204,8 @@ void Preprocessing::run()
             this->continueAfterGabor();
         }
         else {
-            if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_advanced(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
-            else this->gaborMultiThread.setParams(this->imgOriginal, this->oMap.getOMap_advanced(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+            if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+            else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
             this->timer.start();
             this->gaborMultiThread.enhance(this->useFrequencyMap); // filtrovanie so zvolenym typom smerovej mapy
         }
