@@ -5,6 +5,9 @@ Fingerprint preprocessing module for DBOX
 - OpenCV 3.4.1 (https://github.com/opencv/opencv)  
 - Caffe 1.0 (https://github.com/BVLC/caffe)  
 - ArrayFire 3.5.1 (https://arrayfire.com/download/)  
+- CUDA 9.1 (https://developer.nvidia.com/cuda-downloads)  
+
+*The mentioned versions are recommended*  
   
 **Getting Started:**  
 1. Build and run the project to generate .so (.dll / .lib) files  
