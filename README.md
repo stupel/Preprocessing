@@ -21,13 +21,13 @@ void run();
   
 Optional:  
 ```cpp
-void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)  
+void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize);  
   
-void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)  
+void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap);  
   
-void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth)  
+void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);  
   
-void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize)  
+void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);  
 ```
   
 **SIGNALS:**
