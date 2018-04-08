@@ -13,14 +13,14 @@ Fingerprint preprocessing module for DBOX
   
   
 **APIs:**  
-```
+```cpp
 void loadImg (cv::Mat img);  
   
 void run();  
 ```
   
 Optional:  
-```
+```cpp
 void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)  
   
 void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)  
@@ -31,7 +31,7 @@ void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize
 ```
   
 **SIGNALS:**
-```
+```cpp
 preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);  
   
 preprocessingDoneSignal(PREPROCESSING_RESULTS results);  
