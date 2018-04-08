@@ -1,33 +1,42 @@
 # Preprocessing
 Fingerprint preprocessing module for DBOX
 
+**Dependencies:**  
+- OpenCV 3.4.1 (https://github.com/opencv/opencv)  
+- Caffe 1.0 (https://github.com/BVLC/caffe)  
+- ArrayFire 3.5.1 (https://arrayfire.com/download/)  
+  
 **Getting Started:**  
-Build and run the project to generate .so (.dll / .lib) files  
-Include the library and header files to your own application  
-Copy the 'core' folder to your root project directory  
+1. Build and run the project to generate .so (.dll / .lib) files  
+2. Include the library and header files to your own application  
+3. Copy the 'core' folder to your root project directory  
   
   
 **APIs:**  
-*void loadImg (cv::Mat img);*  
+```
+void loadImg (cv::Mat img);  
   
-*void run();*  
-  
+void run();  
+```
   
 Optional:  
-*void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)*  
+```
+void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)  
   
-*void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)*  
+void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)  
   
-*void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth)*  
+void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth)  
   
-*void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize)*  
+void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize)  
+```
   
+**SIGNALS:**
+```
+preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);  
   
-**SIGNALS:**  
-*preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);*  
+preprocessingDoneSignal(PREPROCESSING_RESULTS results);  
   
-*preprocessingDoneSignal(PREPROCESSING_RESULTS results);*  
+preprocessingDurrationSignal(PREPROCESSING_DURATIONS durations);  
   
-*preprocessingDurrationSignal(PREPROCESSING_DURATIONS durations);*  
-  
-*preprocessingErrorSignal(int errorcode);*  
+preprocessingErrorSignal(int errorcode);  
+```
