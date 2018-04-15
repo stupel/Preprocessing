@@ -2,7 +2,7 @@
 
 OrientationMap::OrientationMap(QObject *parent) : QObject(parent)
 {
-
+    this->duration = 0;
 }
 
 void OrientationMap::setParams(const cv::Mat &imgFingerprint_, int &blockSize_, GAUSSIAN_BLUR_SETTINGS &gaussBlurBasic_, GAUSSIAN_BLUR_SETTINGS &gaussBlurAdvanced_)
@@ -13,8 +13,10 @@ void OrientationMap::setParams(const cv::Mat &imgFingerprint_, int &blockSize_, 
     this->gaussBlurAdvanced = gaussBlurAdvanced_;
 }
 
-void OrientationMap::computeBasicMap()
+void OrientationMap::computeBasicMapCPU()
 {
+    this->timer.start();
+
     cv::Mat Gx, Gy;
     int height, width;
     double Vx, Vy;
@@ -62,6 +64,58 @@ void OrientationMap::computeBasicMap()
             this->oMap_basic.at<double>(i, j) = 0.5 * atan2(sinTheta.at<double>(i, j), cosTheta.at<double>(i, j));
         }
     }
+
+    this->duration = this->timer.elapsed();
+}
+
+void OrientationMap::computeBasicMapGPU()
+{
+    af::timer::start();
+
+    cv::Mat imgFingerprint_transposed;
+    cv::transpose(this->imgFingerprint, imgFingerprint_transposed);
+    this->imgFingerprintAF = af::array(this->imgFingerprint.rows, this->imgFingerprint.cols, imgFingerprint_transposed.data);
+
+    af::array Gx, Gy;
+    int height, width;
+    af::array Vx, Vy;
+    height = floor(this->imgFingerprintAF.dims(0) / this->blockSize);
+    width = floor(this->imgFingerprintAF.dims(1) / this->blockSize);
+    int paddingX = this->imgFingerprintAF.dims(1) - width * this->blockSize;
+    int paddingY = this->imgFingerprintAF.dims(0) - height * this->blockSize;
+
+    // vypocet gradientov x a y
+    af::sobel(Gx, Gy, this->imgFingerprintAF);
+
+    // vypocet Vx,Vy a Theta
+    af::array GxCut = Gx(af::seq(paddingY/2, height*this->blockSize+paddingY/2-1), af::seq(paddingX/2, width*this->blockSize+paddingX/2-1));
+    af::array GyCut = Gy(af::seq(paddingY/2, height*this->blockSize+paddingY/2-1), af::seq(paddingX/2, width*this->blockSize+paddingX/2-1));
+
+    GxCut = af::unwrap(GxCut, this->blockSize, this->blockSize, this->blockSize, this->blockSize);
+    GyCut = af::unwrap(GyCut, this->blockSize, this->blockSize, this->blockSize, this->blockSize);
+
+    Vx =  af::sum(2 * GxCut * GyCut);
+    Vy =  af::sum(af::pow(GxCut, 2) - af::pow(GyCut, 2));
+    this->oMapAF_basic = 0.5* af::atan2(Vx.as(f64),Vy.as(f64));
+
+    this->oMapAF_basic = af::moddims(this->oMapAF_basic, height, width);
+
+    // vyhladenie smerovej mapy
+    af::array sinTheta = af::sin(2 * this->oMapAF_basic);
+    af::array cosTheta = af::cos(2 * this->oMapAF_basic);
+
+    af::array gk = af::gaussianKernel(this->gaussBlurBasic.blockSize, this->gaussBlurBasic.blockSize, this->gaussBlurBasic.sigma, this->gaussBlurBasic.sigma);
+
+    sinTheta = af::convolve(sinTheta, gk);
+    cosTheta = af::convolve(cosTheta, gk);
+
+    this->oMapAF_basic = 0.5* af::atan2(sinTheta, cosTheta);
+
+    //ArrayToMat
+    double* dataOmap = this->oMapAF_basic.T().host<double>();
+    this->oMap_basic = cv::Mat(this->oMapAF_basic.dims(0), this->oMapAF_basic.dims(1), CV_64FC1, dataOmap);
+
+    this->duration = af::timer::stop() * 1000;
 }
 
 cv::Mat OrientationMap::getOMap_basic() const
@@ -71,7 +125,10 @@ cv::Mat OrientationMap::getOMap_basic() const
 
 void OrientationMap::computeAdvancedMap()
 {
-    this->computeBasicMap();
+    if (this->imgFingerprint.cols < 300 && this->imgFingerprint.rows < 300) this->computeBasicMapCPU();
+    else this->computeBasicMapCPU();
+
+    this->timer.start();
 
     // expanzia smerovej mapy
     this->oMap_advanced = cv::Mat(this->imgFingerprint.rows, this->imgFingerprint.cols, this->oMap_basic.type());
@@ -102,6 +159,8 @@ void OrientationMap::computeAdvancedMap()
             this->oMap_advanced.at<double>(i, j) = 0.5 * atan2(sinTheta_Advanced.at<double>(i, j),cosTheta_Advanced.at<double>(i, j));
         }
     }
+
+    this->duration += this->timer.elapsed();
 }
 
 
@@ -109,7 +168,6 @@ void OrientationMap::drawBasicMap(const cv::Mat &imgOriginal)
 {
     // farebny obrazok smerovej mapy po vyhladeni
     cv::cvtColor(imgOriginal, this->imgOMap_basic, CV_GRAY2RGB);
-
 
     int height = floor(this->imgFingerprint.rows/this->blockSize);
     int width = floor(this->imgFingerprint.cols/this->blockSize);
@@ -143,4 +201,9 @@ cv::Mat OrientationMap::getImgOMap_basic() const
 cv::Mat OrientationMap::getOMap_advanced() const
 {
     return oMap_advanced;
+}
+
+float OrientationMap::getDuration() const
+{
+    return duration;
 }
