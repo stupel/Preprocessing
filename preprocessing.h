@@ -3,6 +3,7 @@
 #define _USE_MATH_DEFINES
 
 #include "preprocessing_global.h"
+#include "preprocessing_config.h"
 
 #include "orientationmap.h"
 #include "gaborfiltermultithread.h"
@@ -14,27 +15,7 @@
 #include "mask.h"
 #include "qualitymap.h"
 
-// OpenCV
-#include "opencv2/opencv.hpp"
-
-// C++
-#include <iostream>
-#include <exception>
-
-// ArrayFire
-#include "arrayfire.h"
-#include "af/macros.h"
-
-// Qt
-#include <QImage>
-#include <QtMath>
-#include <QDebug>
-#include <QColor>
-#include <QPainter>
-#include <QThread>
-#include <QTime>
-
-typedef struct PREPROCESSING_ALL_RESULTS_ {
+typedef struct preprocessing_all_results {
     cv::Mat imgContrastEnhanced;
     cv::Mat imgEnhanced; // obrazok po prefiltrovani
     cv::Mat imgOrientationMap; // obrazok smerovej mapy
@@ -49,53 +30,50 @@ typedef struct PREPROCESSING_ALL_RESULTS_ {
     cv::Mat qualityMap;
 } PREPROCESSING_ALL_RESULTS;
 
-typedef struct PREPROCESSING_RESULTS_ {
+typedef struct preprocessing_results {
     cv::Mat imgSkeleton;
     cv::Mat imgSkeletonInverted;
-    cv::Mat imgMask;
     cv::Mat qualityMap;
-    cv::Mat frequencyMap;
     cv::Mat orientationMap;
 } PREPROCESSING_RESULTS;
 
-//durration in ms
-typedef struct PREPROCESSING_DURATIONS_ {
+//duration in ms
+typedef struct preprocessing_durations {
     int contrastEnhancement;
-    int gaborFilter;
+    float orientationMap;
+    float gaborFilter;
     int binarization;
     int removingHoles;
     int thinning;
     int mask;
-    int orientationMap;
     int qualityMap;
     int frequencyMap;
 } PREPROCESSING_DURATIONS;
 
-class PREPROCESSINGSHARED_EXPORT Preprocessing : public QThread
+class PREPROCESSINGSHARED_EXPORT Preprocessing : public QObject
 {
     Q_OBJECT
 
 public:
-    Preprocessing();
+    Preprocessing();    
 
-    void loadImg(cv::Mat imgInput);
-    void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize);
-    void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU = false, bool useContrastEnhancement = true, bool useRemoveHoles = true, bool useFixOrientations = true, bool useMask = false, bool useQualityMap = true, bool useFrequencyMap = false);
-    void setFrequencyMapParams(const CAFFE_FILES &freqFiles, const int &blockSize, const int &exBlockSize);
-    void setMaskParams(const CAFFE_FILES &maskFiles, const int &blockSize, const int &exBlockSize, const bool &useSmooth);
-    void generateMask();
-
-    void run();
+    void loadImg(cv::Mat imgOriginal);
+    void setPreprocessingParams(int numThreads, int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
+    void setFeatures(bool useAdvancedMode, bool useGaborFilterGPU = true, bool useContrastEnhancement = true, bool useHoleRemover = true, bool useOrientationFixer = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
+    void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
+    void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
+    void start();
 
 private:
+    ContrastEnhancement contrast;
     OrientationMap oMap;
+    QualityMap qMap;
     GaborFilterMultiThread gaborMultiThread; // objekt na paralelne filtrovanie odtlacku
     GaborFilterGPU gaborGPU;
     Binarization binarization;
     Thinning thinning;
-    ContrastEnhancement contrast;
+    Mask mask;
     FrequencyMap fMap;
-    QualityMap qMap;
 
     QTime timer;
 
@@ -114,31 +92,33 @@ private:
 
     bool useGaborFilterGPU;
     bool useContrastEnhancement;
-    bool useRemoveHoles;
+    bool useHoleRemover;
     bool useFrequencyMap;
     bool useMask;
-    bool useFixOrientations;
+    bool useOrientationFixer;
     bool useQualityMap;
 
     bool firstRun;
     bool imgLoaded;
-    bool isFreqNetLoaded;
-    bool isMaskNetLoaded;
 
-    //Frequency Map
+    // Frequency Map
     CAFFE_FILES freqFiles;
     int freqBlockSize;
     int freqExBlockSize;
+    bool isFrequencyModelLoaded;
 
-    //Mask
+    // Mask
     CAFFE_FILES maskFiles;
     int maskBlockSize;
     int maskExBlockSize;
     bool maskUseSmooth;
+    bool isMaskModelLoaded;
 
+    // PRIVATE FUNCTIONS
     void continueAfterGabor();
     int preprocessingError(int errorcode);
     void clean();
+
 
 private slots:
     void allGaborThreadsFinished();
@@ -146,7 +126,7 @@ private slots:
 signals:
     void preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);
     void preprocessingDoneSignal(PREPROCESSING_RESULTS results);
-    void preprocessingDurrationSignal(PREPROCESSING_DURATIONS durations);
+    void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
     void preprocessingErrorSignal(int errorcode);
 };
 

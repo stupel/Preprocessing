@@ -1,19 +1,17 @@
-#include "preprocessing.h"
+﻿#include "preprocessing.h"
 
 Preprocessing::Preprocessing()
 {
     this->imgLoaded = false;
-
-    this->isFreqNetLoaded = false;
-    this->isMaskNetLoaded = false;
     this->firstRun = true;
 
     //preprocessingFeatures Default
     this->advancedMode = false;
     this->numThreads = QThread::idealThreadCount();
+    this->useGaborFilterGPU = true;
     this->useContrastEnhancement = true;
-    this->useRemoveHoles = true;
-    this->useFixOrientations = true;
+    this->useHoleRemover = true;
+    this->useOrientationFixer = true;
     this->useMask = false;
     this->useQualityMap = true;
     this->useFrequencyMap = false;
@@ -34,8 +32,9 @@ Preprocessing::Preprocessing()
     this->maskFiles.imageMean = "./core/config/Caffe/mask_imagemean.binaryproto";
     this->maskFiles.label = "./core/config/Caffe/mask_labels.txt";
     this->maskBlockSize = 8;
-    this->maskExBlockSize = 19;
+    this->maskExBlockSize = 30;
     this->maskUseSmooth = false;
+    this->isFrequencyModelLoaded = false;
 
     //frequecyMapParams Default
     this->freqFiles.model = "./core/config/Caffe/frequency_deploy.prototxt";
@@ -44,7 +43,9 @@ Preprocessing::Preprocessing()
     this->freqFiles.label = "./core/config/Caffe/frequency_labels.txt";
     this->freqBlockSize = 9;           //!!!!!!!??????????
     this->freqExBlockSize = 30;        //!!!!!!!??????????
+    this->isMaskModelLoaded = false;
 
+    //CONNECTS
     connect(&this->gaborMultiThread, SIGNAL(gaborThreadsFinished()), this, SLOT(allGaborThreadsFinished()));
 }
 
@@ -59,16 +60,26 @@ void Preprocessing::clean()
     this->results.imgQualityMap.release();
     this->results.imgSkeleton.release();
     this->results.imgSkeletonInverted.release();
+
+    this->durations.binarization = 0;
+    this->durations.contrastEnhancement = 0;
+    this->durations.frequencyMap = 0;
+    this->durations.gaborFilter = 0;
+    this->durations.mask = 0;
+    this->durations.orientationMap = 0;
+    this->durations.qualityMap = 0;
+    this->durations.removingHoles = 0;
+    this->durations.thinning = 0;
 }
 
-void Preprocessing::loadImg(cv::Mat imgInput)
+void Preprocessing::loadImg(cv::Mat imgOriginal)
 {
-    this->imgOriginal = imgInput;
+    this->imgOriginal = imgOriginal.clone();
 
     this->imgLoaded = true;
 }
 
-void Preprocessing::setFrequencyMapParams(const CAFFE_FILES &freqFiles, const int &blockSize, const int &exBlockSize)
+void Preprocessing::setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize)
 {
     if (!((this->freqFiles.model == freqFiles.model) && (this->freqFiles.trained == freqFiles.trained) &&
           (this->freqFiles.imageMean == freqFiles.imageMean) && (this->freqFiles.label == freqFiles.label)) )
@@ -81,9 +92,11 @@ void Preprocessing::setFrequencyMapParams(const CAFFE_FILES &freqFiles, const in
 
     this->freqBlockSize = blockSize;
     this->freqExBlockSize = exBlockSize;
+
+    this->isFrequencyModelLoaded = false;
 }
 
-void Preprocessing::setMaskParams(const CAFFE_FILES &maskFiles, const int &blockSize, const int &exBlockSize, const bool &useSmooth)
+void Preprocessing::setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth)
 {
     if (!((this->maskFiles.model == maskFiles.model) && (this->maskFiles.trained == maskFiles.trained) &&
           (this->maskFiles.imageMean == maskFiles.imageMean) && (this->maskFiles.label == maskFiles.label)) )
@@ -97,10 +110,14 @@ void Preprocessing::setMaskParams(const CAFFE_FILES &maskFiles, const int &block
     this->maskBlockSize = blockSize;
     this->maskExBlockSize = exBlockSize;
     this->maskUseSmooth = useSmooth;
+
+    this->isMaskModelLoaded = false;
 }
 
-void Preprocessing::setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)
+void Preprocessing::setPreprocessingParams(int numThreads, int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)
 {
+    if (numThreads == 0) this->numThreads = QThread::idealThreadCount();
+    else this->numThreads = numThreads;
     this->blockSize = blockSize;
     this->gaborLambda = gaborLambda;
     this->gaborSigma = gaborSigma;
@@ -109,45 +126,35 @@ void Preprocessing::setPreprocessingParams(int blockSize, double gaborLambda, do
     this->holeSize = holeSize;
 }
 
-void Preprocessing::setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap)
+void Preprocessing::setFeatures(bool useAdvancedMode, bool useGaborFilterGPU, bool useContrastEnhancement, bool useHoleRemover, bool useOrientationFixer, bool useQualityMap, bool useMask, bool useFrequencyMap)
 {
-    this->advancedMode = advancedMode;
-    if (numThreads == 0) this->numThreads = QThread::idealThreadCount();
-    else this->numThreads = numThreads;
+    this->advancedMode = useAdvancedMode;
     this->useGaborFilterGPU = useGaborFilterGPU;
     this->useContrastEnhancement = useContrastEnhancement;
-    this->useRemoveHoles = useRemoveHoles;
-    this->useFixOrientations = useFixOrientations;
+    this->useHoleRemover = useHoleRemover;
+    this->useOrientationFixer = useOrientationFixer;
     this->useMask = useMask;
     this->useQualityMap = useQualityMap;
     this->useFrequencyMap = useFrequencyMap;
 }
 
-void Preprocessing::generateMask()
-{
-    Mask mask;
-
-    if (!this->isMaskNetLoaded) {
-        mask.loadMaskModel(this->maskFiles);
-        this->isMaskNetLoaded = true;
-    }
-
-    this->timer.start();
-    mask.generate(this->imgOriginal, this->maskBlockSize, this->maskExBlockSize, this->maskUseSmooth);
-    this->durations.mask = this->timer.elapsed();
-    this->results.imgMask = mask.getImgMask();
-}
-
-void Preprocessing::run()
+void Preprocessing::start()
 {
     if(this->imgLoaded) {
 
         if (!this->firstRun) this->clean();
 
+        // MASK WITH NEURAL NETWORK
         if (this->useMask) {
-            this->generateMask();
+            if (!this->isMaskModelLoaded) mask.loadMaskModel(this->maskFiles);
+
+            this->timer.start();
+            mask.generate(this->imgOriginal, this->maskBlockSize, this->maskExBlockSize, this->maskUseSmooth);
+            this->durations.mask = this->timer.elapsed();
+            this->results.imgMask = mask.getImgMask();
         }
 
+        // QUALITY MAP
         if (this->useQualityMap) {
             this->qMap.loadImage(Helper::Mat2QImage(this->imgOriginal, QImage::Format_Grayscale8), 500);
 
@@ -155,29 +162,29 @@ void Preprocessing::run()
             this->qMap.computeQualityMap();
             this->durations.qualityMap = timer.elapsed();
 
-            this->results.imgQualityMap = this->qMap.getImgQualityMap();
+            if (this->advancedMode) this->results.imgQualityMap = this->qMap.getImgQualityMap();
+            this->results.qualityMap = this->qMap.getQualityMap();
         }
 
+        // FREQUENCY MAP WITH NEURAL NETWORK
         if (this->useFrequencyMap) {
-            //if (!this->isFreqNetLoaded) {
-                this->fMap.loadFrequencyMapModel(this->freqFiles);
-                this->isFreqNetLoaded = true;
-            //}
+            if (!this->isFrequencyModelLoaded) fMap.loadFrequencyMapModel(this->freqFiles);
 
             this->timer.start();
-            this->fMap.generate(this->imgOriginal, this->freqBlockSize, this->freqExBlockSize);
+            fMap.generate(this->imgOriginal, this->freqBlockSize, this->freqExBlockSize);
             this->durations.frequencyMap = this->timer.elapsed();
 
-            this->results.frequencyMap = this->fMap.getFrequencyMap();
-            if (this->advancedMode) this->results.imgFrequencyMap = this->fMap.getImgFrequencyMap();
+            this->results.frequencyMap = fMap.getFrequencyMap();
+            if (this->advancedMode) this->results.imgFrequencyMap = fMap.getImgFrequencyMap();
         }
-        //else if (this->useFrequencyMap && !this->freqParamsSet) this->preprocessingError();
 
+        // CONTRAST ENHANCEMENT
         if (this->useContrastEnhancement) {
             this->timer.start();
             this->contrast.enhance(this->imgOriginal, this->results.imgContrastEnhanced, 10, 30, 3, 2);
             this->durations.contrastEnhancement = this->timer.elapsed();
 
+            // ORIENTATION MAP
             this->oMap.setParams(this->results.imgContrastEnhanced, this->blockSize, this->gaussBlurBasic, this->gaussBlurAdvanced);
         }
         else this->oMap.setParams(this->imgOriginal, this->blockSize, this->gaussBlurBasic, this->gaussBlurAdvanced);
@@ -192,9 +199,10 @@ void Preprocessing::run()
             this->results.imgOrientationMap = this->oMap.getImgOMap_basic();
         }
 
+        // GABOR FILTER GPU
         if (this->useGaborFilterGPU) {
-            if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda);
-            else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda);
+            if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
+            else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
 
             this->timer.start();
             this->gaborGPU.enhance();
@@ -203,6 +211,7 @@ void Preprocessing::run()
             this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
             this->continueAfterGabor();
         }
+        // GABOR FILTER CPU MULTITHREAD
         else {
             if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
             else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
@@ -215,7 +224,7 @@ void Preprocessing::run()
 
 void Preprocessing::allGaborThreadsFinished()
 {
-    // ked sa dokoncilo filtrovanie odtlacku
+    // GABOR FILTER CPU MULTITHREAD FINISHED
     this->durations.gaborFilter = this->timer.elapsed();
     this->results.imgEnhanced = this->gaborMultiThread.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
 
@@ -224,6 +233,7 @@ void Preprocessing::allGaborThreadsFinished()
 
 void Preprocessing::continueAfterGabor()
 {
+    // BINARIZATION
     this->binarization.setParams(this->results.imgEnhanced, this->useMask, this->results.imgMask, this->useQualityMap, this->results.imgQualityMap);
 
     this->timer.start();
@@ -231,29 +241,32 @@ void Preprocessing::continueAfterGabor()
     this->durations.binarization = this->timer.elapsed();
     this->results.imgBinarized = this->binarization.getImgBinarized();
 
-    if (this->useRemoveHoles) {
+    // HOLE REMOVER
+    if (this->useHoleRemover) {
         this->timer.start();
         this->binarization.removeHoles(this->holeSize);
         this->durations.removingHoles = this->timer.elapsed();
     }
 
+    // THINNING GUO HALL FAST
     this->timer.start();
     this->thinning.thinGuoHallFast(this->results.imgBinarized, false);
-    if (this->useFixOrientations) this->thinning.thinGuoHallFast(this->results.imgBinarized, true);
+    if (this->useOrientationFixer) this->thinning.thinGuoHallFast(this->results.imgBinarized, true);
     this->durations.thinning = this->timer.elapsed();
     this->results.imgSkeleton = this->thinning.getImgSkeleton();
-    if (this->useFixOrientations) this->results.imgSkeletonInverted = this->thinning.getImgSkeletonInverted();
+    if (this->useOrientationFixer) this->results.imgSkeletonInverted = this->thinning.getImgSkeletonInverted();
 
+    // EMITS
     if (this->advancedMode) {
         emit preprocessingAdvancedDoneSignal(this->results);
     }
     else {
-        PREPROCESSING_RESULTS basicResults = {this->results.imgSkeleton, this->results.imgSkeletonInverted, this->results.imgMask,
-                                              this->results.qualityMap, this->results.frequencyMap, this->results.orientationMap};
+        PREPROCESSING_RESULTS basicResults = {this->results.imgSkeleton, this->results.imgSkeletonInverted,
+                                              this->results.qualityMap, this->results.orientationMap};
         emit preprocessingDoneSignal(basicResults);
     }
 
-    emit preprocessingDurrationSignal(this->durations);
+    emit preprocessingDurationSignal(this->durations);
 
     this->firstRun = false;
 }
