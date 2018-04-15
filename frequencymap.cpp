@@ -2,56 +2,61 @@
 
 FrequencyMap::FrequencyMap(QObject *parent) : QObject(parent)
 {
-
+    this->isFrequencyModelLoaded = false;
 }
 
 void FrequencyMap::loadFrequencyMapModel(const CAFFE_FILES &freqFiles)
 {
-    this->frequencyClassifier = new CaffeNetwork;
-    this->frequencyClassifier->moveToThread(this->frequencyClassifier);
-    this->frequencyClassifier->start();
+    if (this->isFrequencyModelLoaded) {
+        delete frequencyClassifier;
+        this->isFrequencyModelLoaded = false;
+    }
 
+    this->frequencyClassifier = new PreprocessingCaffeNetwork;
     this->frequencyClassifier->loadModel(freqFiles.model, freqFiles.trained, freqFiles.imageMean, freqFiles.label);
+
+    this->isFrequencyModelLoaded = true;
 }
 
 void FrequencyMap::generate(const cv::Mat &imgOriginal, const int &blockSize, const int &exBlockSize)
 {
-    this->frequencyMap = cv::Mat(imgOriginal.rows, imgOriginal.cols, CV_8UC1);
-    this->frequencyMap.setTo(8);
+
+#ifdef CPU_ONLY
+    Caffe::set_mode(Caffe::CPU);
+#else
+    Caffe::set_mode(Caffe::GPU);
+#endif
+
+    this->frequencyMap = cv::Mat(imgOriginal.rows + blockSize, imgOriginal.cols + blockSize, CV_8UC1);
 
     cv::Mat lambdaBlock = cv::Mat(blockSize, blockSize, CV_8UC1);
     cv::Mat borderedOriginal;
     cv::copyMakeBorder(imgOriginal, borderedOriginal, exBlockSize, exBlockSize, exBlockSize, exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
 
-    std::vector<std::vector<Prediction>> predictions;
-    std::vector<Prediction> prediction;
-
     std::vector<cv::Mat> blocks;
-    for (int x = blockSize/2; x < imgOriginal.cols - blockSize/2-1; x += blockSize) {
-        for (int y = blockSize/2; y < imgOriginal.rows - blockSize/2-1; y += blockSize) {
-            blocks.push_back(borderedOriginal.rowRange(exBlockSize + y - exBlockSize/2, exBlockSize + y + exBlockSize/2).colRange(exBlockSize + x - exBlockSize/2, exBlockSize + x + exBlockSize/2));
+    for (int x = exBlockSize; x < imgOriginal.cols + exBlockSize; x += blockSize) {
+        for (int y = exBlockSize; y < imgOriginal.rows + exBlockSize; y += blockSize) {
+            blocks.push_back(borderedOriginal.colRange(x, x + blockSize).rowRange(y, y + blockSize));
         }
     }
 
+    std::vector<std::vector<Prediction>> predictions;
     predictions = this->frequencyClassifier->classifyBatch(blocks, 4);
 
+    std::vector<Prediction> prediction;
     int cnt = 0;
-    for (int x = blockSize/2; x < imgOriginal.cols - blockSize/2-1; x += blockSize) {
-        for (int y = blockSize/2; y < imgOriginal.rows - blockSize/2-1; y += blockSize) {
+    for (int x = 0; x < imgOriginal.cols; x += blockSize) {
+        for (int y = 0; y < imgOriginal.rows; y += blockSize) {
             prediction = predictions[cnt];
             lambdaBlock.setTo(QString::fromStdString(prediction[0].first).toInt());
-            lambdaBlock.copyTo(this->frequencyMap(cv::Rect(x-blockSize/2, y-blockSize/2, blockSize, blockSize)));
+            lambdaBlock.copyTo(this->frequencyMap(cv::Rect(x, y, blockSize, blockSize)));
             cnt++;
         }
     }
 
-    this->frequencyMap.convertTo(this->frequencyMap, CV_64F);
+    this->frequencyMap = this->frequencyMap.rowRange(0, imgOriginal.rows).colRange(0, imgOriginal.cols);
 
-    /*for (int x = 0; x < this->frequencyMap.cols; x++) {
-        for (int y = 0; y < this->frequencyMap.rows; y++) {
-             qDebug() << this->frequencyMap.at<uchar>(y, x);
-        }
-    }*/
+    this->frequencyMap.convertTo(this->frequencyMap, CV_64F);
 
     cv::GaussianBlur(this->frequencyMap, this->frequencyMap, cv::Size(121, 121), 10.0, 10.0);
 }
@@ -72,15 +77,7 @@ cv::Mat FrequencyMap::getImgFrequencyMap() const
 
     cv::minMaxLoc(this->frequencyMap, &minOrig, &maxOrig, &minLoc, &maxLoc);
 
-    //this->frequencyMap.copyTo(imgFMap);
-    //this->frequencyMap.convertTo(imgFMap, CV_8UC1, 255.0 / (maxOrig - minOrig), - 255.0 * minOrig / (maxOrig - minOrig));
-    this->frequencyMap.convertTo(imgFMap, CV_8UC1 , 255.0/ (20 - 1), - 255.0 * 1 / (20 - 1));
-
-    /*for (int x = 0; x < imgFMap.cols; x++) {
-        for (int y = 0; y < imgFMap.rows; y++) {
-            qDebug() << imgFMap.at<uchar>(y, x);
-        }
-    }*/
+    this->frequencyMap.convertTo(imgFMap, CV_8UC1, 255.0 / (maxOrig - minOrig), - 255.0 * minOrig / (maxOrig - minOrig));
 
     return imgFMap;
 }

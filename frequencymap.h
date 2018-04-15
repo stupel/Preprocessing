@@ -1,14 +1,8 @@
 #ifndef FREQUENCYMAP_H
 #define FREQUENCYMAP_H
 
-#include <QObject>
-
-#include <algorithm>
-
-#include "opencv2/opencv.hpp"
-
-#include "caffenetwork.h"
-#include "config.h"
+#include "preprocessing_config.h"
+#include "preprocessing_caffenetwork.h"
 
 class FrequencyMap : public QObject
 {
@@ -24,9 +18,11 @@ public:
     void generate(const cv::Mat &imgOriginal, const int &blockSize, const int &exBlockSize);
 
 private:
-    CaffeNetwork *frequencyClassifier;
+    PreprocessingCaffeNetwork *frequencyClassifier;
 
     cv::Mat frequencyMap;
+
+    bool isFrequencyModelLoaded;
 
 };
 

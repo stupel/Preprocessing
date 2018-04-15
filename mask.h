@@ -1,12 +1,8 @@
 #ifndef MASK_H
 #define MASK_H
 
-#include <QObject>
-#include <QImage>
-#include <QPainter>
-
-#include "caffenetwork.h"
-#include "config.h"
+#include "preprocessing_config.h"
+#include "preprocessing_caffenetwork.h"
 
 class Mask : public QObject
 {
@@ -21,9 +17,11 @@ public:
     void generate(cv::Mat imgOriginal, int blockSize, int exBlockSize, bool useSmooth);
 
 private:
-    CaffeNetwork *maskClassifier;
+    PreprocessingCaffeNetwork *maskClassifier;
 
     cv::Mat imgMask;
+
+    bool isMaskModelLoaded;
 
     void smooth(QImage &smoothedMask, int maskBlockSize);
 
