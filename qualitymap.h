@@ -1,15 +1,7 @@
 #ifndef QUALITYMAP_H
 #define QUALITYMAP_H
 
-#include <QObject>
-#include <QImage>
-#include <QDebug>
-#include <QVector>
-#include <algorithm>
-#include <math.h>
-
-// OpenCV
-#include "opencv2/opencv.hpp"
+#include "preprocessing_config.h"
 
 #define MY_IMG 10
 #define QMAP_LEVELS  5
@@ -282,6 +274,7 @@ public:
     void computeQualityMapMinutiae(MINUTIAE_VECTOR& minutiae); // computes quality map and assigns quality to minutiae
     int *getQuality_map() const;
     cv::Mat getImgQualityMap();
+    cv::Mat getQualityMap();
     int getMap_w() const;
     int getMap_h() const;
     void printMatrix(int *img, int width, int height);

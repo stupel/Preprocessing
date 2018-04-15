@@ -92,7 +92,7 @@ cv::Mat QualityMap::getImgQualityMap()
 {
     int blockSize = 8;
 
-    cv::Mat imgQualityMap = cv::Mat::zeros((this->map_h + 1) * blockSize, (this->map_w + 1) * blockSize, CV_8UC1);
+    cv::Mat imgQualityMap = cv::Mat::zeros(this->map_h * blockSize, this->map_w * blockSize, CV_8UC1);
     cv::Mat block = cv::Mat(blockSize, blockSize, CV_8UC1);
 
     int cnt = 0;
@@ -106,6 +106,29 @@ cv::Mat QualityMap::getImgQualityMap()
     }
 
     return imgQualityMap.rowRange(0, this->inputImg.height()).colRange(0, this->inputImg.width());
+}
+
+cv::Mat QualityMap::getQualityMap()
+{
+    int blockSize = 8;
+
+    cv::Mat qualityMap = cv::Mat::zeros(this->map_h * blockSize, this->map_w * blockSize, CV_8UC1);
+    cv::Mat block = cv::Mat(blockSize, blockSize, CV_8UC1);
+
+    int cnt = 0;
+    for (int y = 0; y < this->map_h * blockSize; y += blockSize) {
+        for (int x = 0; x < this->map_w * blockSize; x += blockSize) {
+            if (this->quality_map[cnt] == 4) block.setTo(100);
+            else if (this->quality_map[cnt] == 3) block.setTo(50);
+            else if (this->quality_map[cnt] == 2) block.setTo(25);
+            else if (this->quality_map[cnt] == 1) block.setTo(10);
+            else block.setTo(1);
+            block.copyTo(qualityMap(cv::Rect(x, y, blockSize, blockSize)));
+            cnt++;
+        }
+    }
+
+    return qualityMap.rowRange(0, this->inputImg.height()).colRange(0, this->inputImg.width());
 }
 
 void QualityMap::fill_minutiae(MINUTIAE_VECTOR &minutiae)
@@ -406,8 +429,7 @@ void QualityMap::combined_minutia_quality(MINUTIAE *minutiae,
           minutia = minutiae->list[i];
 
           /* Compute reliability from stdev and mean of pixel neighborhood. */
-          gs_reliability = grayscale_reliability(minutia,
-                                                 idata, iw, ih, radius_pix);
+          gs_reliability = grayscale_reliability(minutia, idata, iw, ih, radius_pix);
 
           /* Lookup quality map value. */
           /* Compute minutia pixel index. */
