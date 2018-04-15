@@ -1,11 +1,8 @@
 #ifndef THINNING_H
 #define THINNING_H
 
-#include <QObject>
+#include "preprocessing_config.h"
 
-#include <deque>
-
-#include "opencv2/opencv.hpp"
 #include "imagecontour.h"
 
 typedef bool (*VoronoiFn)(uchar*  skeldata, int iter, int col, int row, int cols);
@@ -19,7 +16,7 @@ public:
 
     static const int NOLIMIT = INT_MAX;
 
-    bool thinGuoHallFast(const cv::Mat1b& img, bool inverted, bool crop_img_before = true, int max_iters = NOLIMIT);
+    bool thinGuoHallFast(const cv::Mat1b& img, bool inverted, bool crop_img_before = false, int max_iters = NOLIMIT);
 
     //getNset
     cv::Mat getImgSkeleton() const;
