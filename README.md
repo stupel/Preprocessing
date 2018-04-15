@@ -15,6 +15,7 @@ Fingerprint preprocessing module for DBOX
 3. Copy the 'core' folder to your root project directory  
   
 <br />  
+
 **APIs:**  
 ```cpp
 void loadImg(cv::Mat imgOriginal);
@@ -33,6 +34,7 @@ void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool u
 void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);  
 ```
 <br />  
+
 **SIGNALS:**
 ```cpp
 preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);  
