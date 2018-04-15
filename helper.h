@@ -1,17 +1,10 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-// OpenCV
-#include "opencv/cv.hpp"
+#include "preprocessing_config.h"
 
-// ArrayFire
-#include "arrayfire.h"
-#include "af/macros.h"
 #undef max
 #undef min
-
-// Qt
-#include <QImage>
 
 class Helper
 {
@@ -32,19 +25,22 @@ public:
                        img.bytesPerLine()).clone();
     }
 
-    static inline void mat2array(const cv::Mat& mat, af::array& arr){
+   static inline cv::Mat array2mat(const af::array &input)
+   {
+       uchar* data = input.as(u8).T().host<uchar>();
+       cv::Mat output((int)input.dims(0), (int)input.dims(1), CV_8UC1, data);
+       af::freeHost(data);
+       return output;
+   }
 
-        float *imgdata = new float[mat.rows*mat.cols];
-        int global=0;
-        for(int i=0;i<mat.cols;i++){
-            for(int j=0;j<mat.rows;j++){
-                imgdata[global++]=mat.at<uchar>(j,i);
-            }
-        }
-        arr = af::array(mat.rows,mat.cols,imgdata);
-        delete[] imgdata;
-    }
-    static inline void mat2arraydouble(const cv::Mat& mat, af::array& arr){
+   static inline af::array mat2array(const cv::Mat &input)
+   {
+       cv::Mat helperMat;
+       cv::transpose(input,helperMat);
+       return af::array(input.rows, input.cols, helperMat.data);
+   }
+
+    static inline void mat2array_double(const cv::Mat& mat, af::array& arr){
 
         double *imgdata = new double[mat.rows*mat.cols];
         int global=0;
@@ -91,6 +87,7 @@ public:
             }
             ii++;
         }
+        delete imgdata;
     }
 
     static inline QByteArray IntToQByteArray(int x) {
