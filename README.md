@@ -17,16 +17,16 @@ Fingerprint preprocessing module for DBOX
   
 **APIs:**  
 ```cpp
-void loadImg (cv::Mat img);  
+void loadImg(cv::Mat imgOriginal);
   
-void run();  
+void start();  
 ```
   
 Optional:  
 ```cpp
-void setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize);  
+void setPreprocessingParams(int numThreads, int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);  
   
-void setFeatures(bool advancedMode, int numThreads, bool useGaborFilterGPU, bool useContrastEnhancement, bool useRemoveHoles, bool useFixOrientations, bool useMask, bool useQualityMap, bool useFrequencyMap);  
+void setFeatures(bool useAdvancedMode, bool useGaborFilterGPU = true, bool useContrastEnhancement = true, bool useHoleRemover = true, bool useOrientationFixer = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);  
   
 void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);  
   
@@ -39,7 +39,7 @@ preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);
   
 preprocessingDoneSignal(PREPROCESSING_RESULTS results);  
   
-preprocessingDurrationSignal(PREPROCESSING_DURATIONS durations);  
+preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);  
   
 preprocessingErrorSignal(int errorcode);  
 ```
