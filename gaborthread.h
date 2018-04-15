@@ -1,13 +1,7 @@
 #ifndef GABORTHREAD_H
 #define GABORTHREAD_H
 
-#include <QObject>
-#include <QDebug>
-#include <QString>
-#include <QThread>
-#include <iostream>
-
-#include "opencv2/opencv.hpp"
+#include "preprocessing_config.h"
 
 class GaborThread : public QObject
 {

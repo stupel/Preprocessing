@@ -1,10 +1,7 @@
 #ifndef GABORFILTERGPU_H
 #define GABORFILTERGPU_H
 
-#include <QObject>
-#include <QDebug>
-
-#include "helper.h"
+#include "preprocessing_config.h"
 
 class GaborFilterGPU : public QObject
 {
@@ -13,15 +10,18 @@ class GaborFilterGPU : public QObject
 public:
     GaborFilterGPU();
 
-    void setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, const cv::Mat &frequencyMap_, int blockSize_, double sigma_, double lambda_);
+    void setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, int blockSize_, double sigma_, double lambda_, bool useFrequencyMap, const cv::Mat &frequencyMap_);
     void enhance();
 
     cv::Mat getImgEnhanced() const;
+    float getDuration() const;
 
 private:
     af::array imgFp;
     af::array oMap;
+
     af::array fMap;
+    bool useFrequencyMap ;
 
     cv::Mat imgEnhanced;
 
@@ -33,6 +33,8 @@ private:
 
     int origWidth;
     int origHeight;
+
+    float duration;
 
     af::array getGaborKernel(const af::array& oMap);
 };

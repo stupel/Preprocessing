@@ -1,14 +1,7 @@
 #ifndef GABORFILTERMULTITHREAD_H
 #define GABORFILTERMULTITHREAD_H
 
-#include <QObject>
-#include <QMetaType>
-#include <QtMath>
-#include <QThread>
-#include <QVector>
-#include <QDebug>
-#include <QTime>
-
+#include "preprocessing_config.h"
 #include "gaborthread.h"
 
 // registracia typov, aby som mohol cv::Mat a cv::Rect odosielat v signale

@@ -1,9 +1,7 @@
 #ifndef BINARIZATION_H
 #define BINARIZATION_H
 
-#include "helper.h"
-
-#include <QObject>
+#include "preprocessing_config.h"
 
 class Binarization : public QObject
 {

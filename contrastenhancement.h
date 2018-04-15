@@ -1,9 +1,7 @@
 #ifndef CONTRASTENHANCEMENT_H
 #define CONTRASTENHANCEMENT_H
 
-#include <QObject>
-
-#include "opencv2/opencv.hpp"
+#include "preprocessing_config.h"
 
 class ContrastEnhancement : public QObject
 {

@@ -2,6 +2,8 @@
 
 GaborFilterGPU::GaborFilterGPU()
 {
+    this->duration = 0;
+
     this->blockSize = 13;
     this->sigma = 3;
     this->lambda = 9;
@@ -9,15 +11,16 @@ GaborFilterGPU::GaborFilterGPU()
     this->psi = 0;
 }
 
-void GaborFilterGPU::setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, const cv::Mat &frequencyMap_, int blockSize_, double sigma_, double lambda_)
+void GaborFilterGPU::setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, int blockSize_, double sigma_, double lambda_, bool useFrequencyMap, const cv::Mat &frequencyMap_)
 {
     Helper::mat2array_float(img_, this->imgFp);
-    Helper::mat2arraydouble(orientationMap_, this->oMap);
-    //Helper::mat2arraydouble(frequencyMap_, this->fMap);
-    //this->fMap = frequencyMap_;
+    Helper::mat2array_double(orientationMap_, this->oMap);
     this->blockSize = blockSize_;
     this->sigma = sigma_;
     this->lambda = lambda_;
+
+    this->useFrequencyMap = useFrequencyMap;
+    if (useFrequencyMap) Helper::mat2array_double(frequencyMap_, this->fMap);
 
     this->origWidth = img_.cols;
     this->origHeight = img_.rows;
@@ -42,7 +45,9 @@ af::array GaborFilterGPU::getGaborKernel(const af::array& oMap)
 
 void GaborFilterGPU::enhance()
 {
-    //af::array imgAF;
+    // TIMER
+    af::timer::start();
+
     af::array kernels; // Gabor kernely
     af::array unwrapped_img = af::constant(255, this->blockSize * this->oMap.dims(0) + this->blockSize - 1, this->blockSize * this->oMap.dims(1) + this->blockSize - 1); // po blokoch rozdeleny a unwrapovany odtlacok pripraveny na filtrovanie
     af::array unwrapped_img_init; // pomocny orezany obraz
@@ -57,18 +62,18 @@ void GaborFilterGPU::enhance()
 
     // 1. IMAGE CUT + UNWRAP
     unwrapped_img_init = this->imgFp(af::seq(ty) , af::seq(tx)); // orezanie obrazu
-    qDebug() << unwrapped_img_init.dims(0);
-    qDebug() << unwrapped_img_init.dims(1);
+    //qDebug() << unwrapped_img_init.dims(0);
+    //qDebug() << unwrapped_img_init.dims(1);
 
     af::copy(unwrapped_img,
              unwrapped_img_init,
              af::seq(this->blockSize / 2, this->blockSize / 2 + unwrapped_img_init.dims(0) - 1),
              af::seq(this->blockSize / 2, this->blockSize / 2 + unwrapped_img_init.dims(1) - 1));
-    qDebug() << unwrapped_img.dims(0);
-    qDebug() << unwrapped_img.dims(1);
+    //qDebug() << unwrapped_img.dims(0);
+    //qDebug() << unwrapped_img.dims(1);
     unwrapped_img = af::unwrap(unwrapped_img, this->blockSize, this->blockSize, 1, 1, 0, 0);
-    qDebug() << unwrapped_img.dims(0);
-    qDebug() << unwrapped_img.dims(1);
+    //qDebug() << unwrapped_img.dims(0);
+    //qDebug() << unwrapped_img.dims(1);
 
     // 2. GABOR KERNELS
     ThetaFlat = af::flat(this->oMap);
@@ -78,9 +83,9 @@ void GaborFilterGPU::enhance()
         kernels(af::span, af::span, i) = this->getGaborKernel(ThetaFlat(i));
     }
 
-    qDebug() << kernels.dims(0);
-    qDebug() << kernels.dims(1);
-    qDebug() << kernels.dims(2);
+    //qDebug() << kernels.dims(0);
+    //qDebug() << kernels.dims(1);
+    //qDebug() << kernels.dims(2);
 
     // 3. PREPARING GABOR KERNELS
     kernels = af::moddims(kernels, this->blockSize * this->blockSize, ThetaFlatElems); // 3D kernely do 2D unwrapovanych kernelov
@@ -103,14 +108,16 @@ void GaborFilterGPU::enhance()
     Helper::af_normalizeImage(output);
     this->imgEnhanced = cv::Mat(this->origHeight, this->origWidth, CV_8UC1);
     Helper::array2mat(output, this->imgEnhanced);
-    /*this->afterGaborAF = output.copy();
-    //cv::imshow("aftergabor", this->afterGabor);
 
-    afterGabor = cv::Mat(afterGaborThin.rows, afterGaborThin.cols, CV_8UC1);
-    afterGaborThin.copyTo(this->afterGabor);*/
+    this->duration = af::timer::stop() * 1000; // s to ms
 }
 
 cv::Mat GaborFilterGPU::getImgEnhanced() const
 {
     return imgEnhanced;
+}
+
+float GaborFilterGPU::getDuration() const
+{
+    return duration;
 }

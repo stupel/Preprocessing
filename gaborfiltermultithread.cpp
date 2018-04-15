@@ -69,5 +69,6 @@ void GaborFilterMultiThread::oneGaborThreadFinished()
 
 cv::Mat GaborFilterMultiThread::getImgEnhanced() const
 {
+
     return imgEnhanced;
 }

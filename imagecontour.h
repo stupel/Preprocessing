@@ -1,10 +1,7 @@
 #ifndef IMAGECONTOUR_H
 #define IMAGECONTOUR_H
 
-#include <stdio.h>
-#include <vector>
-#include <numeric>      // std::accumulate
-#include <opencv2/core/core.hpp>
+#include "preprocessing_config.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

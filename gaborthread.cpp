@@ -16,7 +16,7 @@ void GaborThread::enhanceFragmentSlot(const bool &useFrequencyMap)
     cv::Mat kernel;
     cv::Mat subMat, sub;
     cv::Scalar s;
-    // filtrovanie
+
     for(int i = this->rect.y; i < this->rect.y + this->rect.height; i++){
         for(int j = this->rect.x; j < this->rect.x + this->rect.width; j++){
             if (useFrequencyMap) kernel = cv::getGaborKernel(cv::Size(this->blockSize,this->blockSize), this->sigma, this->oMap.at<double>(i,j), this->fMap.at<double>(i,j), 1, 0, CV_64F);
