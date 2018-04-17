@@ -25,22 +25,32 @@ public:
                        img.bytesPerLine()).clone();
     }
 
-   static inline cv::Mat array2mat(const af::array &input)
+   static inline cv::Mat array_uchar2mat_uchar(const af::array &input)
    {
        uchar* data = input.as(u8).T().host<uchar>();
-       cv::Mat output((int)input.dims(0), (int)input.dims(1), CV_8UC1, data);
+       cv::Mat output = cv::Mat((int)input.dims(0), (int)input.dims(1), CV_8UC1, data).clone();
        af::freeHost(data);
+
        return output;
    }
 
-   static inline af::array mat2array(const cv::Mat &input)
+   static inline cv::Mat array_float2mat_float(const af::array &input)
+   {
+       float* data = input.T().as(f32).host<float>();
+       cv::Mat output = cv::Mat((int)input.dims(0), (int)input.dims(1), CV_32FC1, data).clone();
+       af::freeHost(data);
+
+       return output;
+   }
+
+   static inline af::array mat_uchar2array_uchar(const cv::Mat &input)
    {
        cv::Mat helperMat;
        cv::transpose(input,helperMat);
-       return af::array(input.rows, input.cols, helperMat.data);
+       return af::array(input.rows, input.cols, helperMat.data).as(u8);
    }
 
-    static inline void mat2array_double(const cv::Mat& mat, af::array& arr){
+    static inline af::array mat_double2array_double(const cv::Mat& mat){
 
         double *imgdata = new double[mat.rows*mat.cols];
         int global=0;
@@ -49,8 +59,10 @@ public:
                 imgdata[global++]=mat.at<double>(j,i);
             }
         }
-        arr = af::array(mat.rows,mat.cols,imgdata);
+        af::array arr = af::array(mat.rows,mat.cols,imgdata);
         delete[] imgdata;
+
+        return arr;
     }
 
     static inline void af_normalizeImage(af::array& in){
@@ -59,8 +71,22 @@ public:
             in = 255*((in.as(f32)-minn)/(maxx-minn));
     }
 
+    static inline af::array mat_float2array_float(const cv::Mat& mat){
 
-    static inline void mat2array_float(const cv::Mat& mat, af::array& arr){
+        float *imgdata = new float[mat.rows*mat.cols];
+        int global=0;
+        for(int i=0;i<mat.cols;i++){
+            for(int j=0;j<mat.rows;j++){
+                imgdata[global++]=mat.at<float>(j,i);
+            }
+        }
+        af::array arr = af::array(mat.rows,mat.cols,imgdata);
+        delete[] imgdata;
+
+        return arr;
+    }
+
+    static inline af::array mat_uchar2array_float(const cv::Mat& mat){
 
         float *imgdata = new float[mat.rows*mat.cols];
         int global=0;
@@ -69,25 +95,10 @@ public:
                 imgdata[global++]=mat.at<uchar>(j,i);
             }
         }
-        arr = af::array(mat.rows,mat.cols,imgdata);
+        af::array arr = af::array(mat.rows,mat.cols,imgdata);
         delete[] imgdata;
-    }
 
-    static inline void array2mat(af::array& arr, cv::Mat& mat){
-
-        float *imgdata = arr.host<float>();
-        int ii=0,jj=0;
-        int total = arr.dims(0)*arr.dims(1);
-
-        for(int i=0;i<(arr.dims(0));i++){
-            jj=0;
-            for(int j=i; j<total;j+=arr.dims(0)){
-                mat.at<uchar>(ii,jj) = imgdata[j];
-                jj++;
-            }
-            ii++;
-        }
-        delete imgdata;
+        return arr;
     }
 
     static inline QByteArray IntToQByteArray(int x) {
