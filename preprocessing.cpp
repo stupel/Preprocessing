@@ -8,7 +8,6 @@ Preprocessing::Preprocessing()
     //preprocessingFeatures Default
     this->advancedMode = false;
     this->numThreads = QThread::idealThreadCount();
-    this->useGaborFilterGPU = true;
     this->useContrastEnhancement = true;
     this->useHoleRemover = true;
     this->useOrientationFixer = true;
@@ -126,16 +125,29 @@ void Preprocessing::setPreprocessingParams(int numThreads, int blockSize, double
     this->holeSize = holeSize;
 }
 
-void Preprocessing::setFeatures(bool useAdvancedMode, bool useGaborFilterGPU, bool useContrastEnhancement, bool useHoleRemover, bool useOrientationFixer, bool useQualityMap, bool useMask, bool useFrequencyMap)
+void Preprocessing::setFeatures(bool useAdvancedMode, bool useContrastEnhancement, bool useHoleRemover, bool useOrientationFixer, bool useQualityMap, bool useMask, bool useFrequencyMap)
 {
     this->advancedMode = useAdvancedMode;
-    this->useGaborFilterGPU = useGaborFilterGPU;
     this->useContrastEnhancement = useContrastEnhancement;
     this->useHoleRemover = useHoleRemover;
     this->useOrientationFixer = useOrientationFixer;
     this->useMask = useMask;
     this->useQualityMap = useQualityMap;
     this->useFrequencyMap = useFrequencyMap;
+}
+
+void Preprocessing::setCPUOnly(bool enabled)
+{
+    if (enabled) {
+        #ifndef CPU_ONLY
+            #define CPU_ONLY
+        #endif
+    }
+    else {
+        #ifdef CPU_ONLY
+            #undef CPU_ONLY
+        #endif
+    }
 }
 
 void Preprocessing::start()
@@ -190,7 +202,13 @@ void Preprocessing::start()
         else this->oMap.setParams(this->imgOriginal, this->blockSize, this->gaussBlurBasic, this->gaussBlurAdvanced);
 
         this->timer.start();
-        this->oMap.computeAdvancedMap();
+
+        #ifdef CPU_ONLY
+            this->oMap.computeAdvancedMapCPU();
+        #else
+            this->oMap.computeAdvancedMapGPU();
+        #endif
+
         this->durations.orientationMap = this->timer.elapsed();
         this->results.orientationMap = this->oMap.getOMap_advanced();
 
@@ -199,27 +217,36 @@ void Preprocessing::start()
             this->results.imgOrientationMap = this->oMap.getImgOMap_basic();
         }
 
+        #ifndef CPU_ONLY
         // GABOR FILTER GPU
-        if (this->useGaborFilterGPU) {
-            if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
-            else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
+        if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
+        else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
 
-            this->timer.start();
-            this->gaborGPU.enhance();
-            this->durations.gaborFilter = this->timer.elapsed();
+        this->gaborGPU.enhance();
+        this->durations.gaborFilter = this->gaborGPU.getDuration();
 
-            this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
-            this->continueAfterGabor();
-        }
+        this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
+        this->continueAfterGabor();
+
+        #else
         // GABOR FILTER CPU MULTITHREAD
-        else {
-            if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
-            else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
-            this->timer.start();
-            this->gaborMultiThread.enhance(this->useFrequencyMap); // filtrovanie so zvolenym typom smerovej mapy
-        }
+        if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+        else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+        this->timer.start();
+        this->gaborMultiThread.enhance(this->useFrequencyMap); // filtrovanie so zvolenym typom smerovej mapy
+        #endif
     }
     else this->preprocessingError(10);
+}
+
+PREPROCESSING_ALL_RESULTS Preprocessing::getResults() const
+{
+    return results;
+}
+
+PREPROCESSING_DURATIONS Preprocessing::getDurations() const
+{
+    return durations;
 }
 
 void Preprocessing::allGaborThreadsFinished()
