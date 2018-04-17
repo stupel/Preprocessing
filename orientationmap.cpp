@@ -19,7 +19,7 @@ void OrientationMap::computeBasicMapCPU()
 
     cv::Mat Gx, Gy;
     int height, width;
-    double Vx, Vy;
+    float Vx, Vy;
     height = floor(this->imgFingerprint.rows / this->blockSize);
     width = floor(this->imgFingerprint.cols / this->blockSize);
 
@@ -27,33 +27,33 @@ void OrientationMap::computeBasicMapCPU()
     int paddingY = this->imgFingerprint.rows - height*this->blockSize;
 
     // BASIC smerova mapa
-    this->oMap_basic = cv::Mat(height, width, CV_64F);
+    this->oMap_basic = cv::Mat(height, width, CV_32F);
 
     // vypocet gradientov x a y
-    cv::Sobel(this->imgFingerprint,Gx,CV_64FC1, 1, 0);
-    cv::Sobel(this->imgFingerprint,Gy,CV_64FC1, 0, 1);
+    cv::Sobel(this->imgFingerprint,Gx,CV_32FC1, 1, 0);
+    cv::Sobel(this->imgFingerprint,Gy,CV_32FC1, 0, 1);
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Vx=0.0; Vy=0.0;
             for (int i = y * this->blockSize + paddingY / 2; i < y * this->blockSize + paddingY / 2 + this->blockSize; i++){
                 for (int j = x * this->blockSize + paddingX / 2; j < x * this->blockSize + paddingX / 2 + this->blockSize; j++){
-                    Vx += (2 * (Gx.at<double>(i,j) * Gy.at<double>(i, j)));
-                    Vy += pow(Gx.at<double>(i,j),2) - pow(Gy.at<double>(i,j), 2);
+                    Vx += (2 * (Gx.at<float>(i,j) * Gy.at<float>(i, j)));
+                    Vy += pow(Gx.at<float>(i,j),2) - pow(Gy.at<float>(i,j), 2);
                 }
             }
-            this->oMap_basic.at<double>(y, x) = 0.5 * atan2(Vx, Vy);
+            this->oMap_basic.at<float>(y, x) = 0.5 * atan2(Vx, Vy);
         }
     }
 
     //vyhladenie smerovej mapy
-    cv::Mat sinTheta(this->oMap_basic.size(), CV_64F);
-    cv::Mat cosTheta(this->oMap_basic.size(), CV_64F);
+    cv::Mat sinTheta(this->oMap_basic.size(), CV_32F);
+    cv::Mat cosTheta(this->oMap_basic.size(), CV_32F);
 
     for(int i = 0; i < this->oMap_basic.rows; i++){
         for(int j = 0; j < this->oMap_basic.cols; j++){
-            cosTheta.at<double>(i, j) = cos(2* this->oMap_basic.at<double>(i, j));
-            sinTheta.at<double>(i, j) = sin(2* this->oMap_basic.at<double>(i, j));
+            cosTheta.at<float>(i, j) = cos(2* this->oMap_basic.at<float>(i, j));
+            sinTheta.at<float>(i, j) = sin(2* this->oMap_basic.at<float>(i, j));
         }
     }
 
@@ -61,7 +61,7 @@ void OrientationMap::computeBasicMapCPU()
     cv::GaussianBlur(sinTheta, sinTheta, cv::Size(this->gaussBlurBasic.blockSize, this->gaussBlurBasic.blockSize), this->gaussBlurBasic.sigma,this->gaussBlurBasic.sigma);
     for(int i = 0; i < this->oMap_basic.rows;i++) {
         for(int j = 0; j < this->oMap_basic.cols; j++) {
-            this->oMap_basic.at<double>(i, j) = 0.5 * atan2(sinTheta.at<double>(i, j), cosTheta.at<double>(i, j));
+            this->oMap_basic.at<float>(i, j) = 0.5 * atan2(sinTheta.at<float>(i, j), cosTheta.at<float>(i, j));
         }
     }
 
@@ -72,9 +72,11 @@ void OrientationMap::computeBasicMapGPU()
 {
     af::timer::start();
 
-    cv::Mat imgFingerprint_transposed;
+    //Mat2Array
+    /*cv::Mat imgFingerprint_transposed;
     cv::transpose(this->imgFingerprint, imgFingerprint_transposed);
-    this->imgFingerprintAF = af::array(this->imgFingerprint.rows, this->imgFingerprint.cols, imgFingerprint_transposed.data);
+    this->imgFingerprintAF = af::array(this->imgFingerprint.rows, this->imgFingerprint.cols, imgFingerprint_transposed.data);*/
+    this->imgFingerprintAF = Helper::mat_uchar2array_uchar(this->imgFingerprint);
 
     af::array Gx, Gy;
     int height, width;
@@ -96,7 +98,7 @@ void OrientationMap::computeBasicMapGPU()
 
     Vx =  af::sum(2 * GxCut * GyCut);
     Vy =  af::sum(af::pow(GxCut, 2) - af::pow(GyCut, 2));
-    this->oMapAF_basic = 0.5* af::atan2(Vx.as(f64),Vy.as(f64));
+    this->oMapAF_basic = 0.5* af::atan2(Vx.as(f32),Vy.as(f32));
 
     this->oMapAF_basic = af::moddims(this->oMapAF_basic, height, width);
 
@@ -112,8 +114,24 @@ void OrientationMap::computeBasicMapGPU()
     this->oMapAF_basic = 0.5* af::atan2(sinTheta, cosTheta);
 
     //ArrayToMat
-    double* dataOmap = this->oMapAF_basic.T().host<double>();
-    this->oMap_basic = cv::Mat(this->oMapAF_basic.dims(0), this->oMapAF_basic.dims(1), CV_64FC1, dataOmap);
+    //float* dataOmap = this->oMapAF_basic.T().host<float>();
+    //this->oMap_basic = cv::Mat(this->oMapAF_basic.dims(0), this->oMapAF_basic.dims(1), CV_32FC1, dataOmap);
+    //af::freeHost(dataOmap);       //!!!!!!!!!
+    this->oMap_basic = Helper::array_float2mat_float(this->oMapAF_basic);
+
+    /*for (int i = 0; i < this->oMapAF_basic.dims(0); i++) {
+        for (int j = 0; j < this->oMapAF_basic.dims(0); j++) {
+            std::cout << (float)this->oMap_basic.at<float>(i,j) - this->oMapAF_basic(i, j).scalar<float>() << " ";
+        }
+        std::cout << std::endl;
+    }*/
+
+//    for (int i = 0; i < this->oMapAF_basic.dims(0); i++) {
+//        for (int j = 0; j < this->oMapAF_basic.dims(0); j++) {
+//            std::cout << this->oMapAF_basic(i, j).scalar<float>() << " ";
+//        }
+//        std::cout << std::endl;
+//    }
 
     this->duration = af::timer::stop() * 1000;
 }
@@ -123,10 +141,9 @@ cv::Mat OrientationMap::getOMap_basic() const
     return oMap_basic;
 }
 
-void OrientationMap::computeAdvancedMap()
+void OrientationMap::computeAdvancedMapCPU()
 {
-    if (this->imgFingerprint.cols < 300 && this->imgFingerprint.rows < 300) this->computeBasicMapCPU();
-    else this->computeBasicMapCPU();
+    this->computeBasicMapCPU();
 
     this->timer.start();
 
@@ -137,18 +154,18 @@ void OrientationMap::computeAdvancedMap()
     for(int i = 0; i < this->oMap_basic.rows; i++) {
         for(int j = 0; j < this->oMap_basic.cols; j++) {
             blk = this->oMap_advanced.rowRange(i * this->blockSize, i * this->blockSize + this->blockSize).colRange(j * this->blockSize, j * this->blockSize + this->blockSize);
-            blk.setTo(cv::Scalar(this->oMap_basic.at<double>(i, j)));
+            blk.setTo(cv::Scalar(this->oMap_basic.at<float>(i, j)));
         }
     }
 
     // vyhladenie expandovanej smerovej mapy
-    cv::Mat sinTheta_Advanced(this->oMap_advanced.size(), CV_64F);
-    cv::Mat cosTheta_Advanced(this->oMap_advanced.size(), CV_64F);
+    cv::Mat sinTheta_Advanced(this->oMap_advanced.size(), CV_32F);
+    cv::Mat cosTheta_Advanced(this->oMap_advanced.size(), CV_32F);
 
     for(int i = 0; i < this->oMap_advanced.rows; i++) {
         for(int j = 0; j < this->oMap_advanced.cols; j++) {
-            cosTheta_Advanced.at<double>(i, j) = cos(2 * this->oMap_advanced.at<double>(i, j));
-            sinTheta_Advanced.at<double>(i, j) = sin(2 * this->oMap_advanced.at<double>(i, j));
+            cosTheta_Advanced.at<float>(i, j) = cos(2 * this->oMap_advanced.at<float>(i, j));
+            sinTheta_Advanced.at<float>(i, j) = sin(2 * this->oMap_advanced.at<float>(i, j));
         }
     }
 
@@ -156,13 +173,48 @@ void OrientationMap::computeAdvancedMap()
     cv::GaussianBlur(sinTheta_Advanced, sinTheta_Advanced, cv::Size(this->gaussBlurAdvanced.blockSize,this->gaussBlurAdvanced.blockSize),this->gaussBlurAdvanced.sigma,this->gaussBlurAdvanced.sigma);
     for(int i = 0; i < this->oMap_advanced.rows; i++) {
         for(int j = 0; j < this->oMap_advanced.cols; j++) {
-            this->oMap_advanced.at<double>(i, j) = 0.5 * atan2(sinTheta_Advanced.at<double>(i, j),cosTheta_Advanced.at<double>(i, j));
+            this->oMap_advanced.at<float>(i, j) = 0.5 * atan2(sinTheta_Advanced.at<float>(i, j),cosTheta_Advanced.at<float>(i, j));
         }
     }
 
     this->duration += this->timer.elapsed();
 }
 
+void OrientationMap::computeAdvancedMapGPU()
+{
+    af::timer::start();
+
+    // compute the basic O-Map first
+    this->computeBasicMapGPU();
+
+    // basic O-Map expansion
+    this->oMapAF_advanced = af::moddims(this->oMapAF_basic, 1, this->oMapAF_basic.dims(0) * this->oMapAF_basic.dims(1));
+    this->oMapAF_advanced = af::tile(this->oMapAF_advanced, this->blockSize * this->blockSize);
+    this->oMapAF_advanced = af::wrap(this->oMapAF_advanced,
+                                   this->oMapAF_basic.dims(0) * this->blockSize,
+                                   this->oMapAF_basic.dims(1) * this->blockSize,
+                                   this->blockSize,
+                                   this->blockSize,
+                                   this->blockSize,
+                                   this->blockSize);
+
+    // smoothing the expanded O-Map
+    af::array sinTheta = af::sin(2 * this->oMapAF_advanced);
+    af::array cosTheta = af::cos(2 * this->oMapAF_advanced);
+    af::array gk = af::gaussianKernel(this->gaussBlurAdvanced.blockSize,
+                                      this->gaussBlurAdvanced.blockSize,
+                                      this->gaussBlurAdvanced.sigma,
+                                      this->gaussBlurAdvanced.sigma);
+
+    sinTheta = af::convolve(sinTheta, gk);
+    cosTheta = af::convolve(cosTheta, gk);
+
+    this->oMapAF_advanced = 0.5* af::atan2(sinTheta, cosTheta);
+
+    this->oMap_advanced = Helper::array_float2mat_float(this->oMapAF_advanced);
+
+    this->duration +=  af::timer::stop();
+}
 
 void OrientationMap::drawBasicMap(const cv::Mat &imgOriginal)
 {
@@ -175,11 +227,11 @@ void OrientationMap::drawBasicMap(const cv::Mat &imgOriginal)
     int paddingY = this->imgFingerprint.rows - height*this->blockSize;
     int rowsMat = this->oMap_basic.rows;
     int colsMat = this->oMap_basic.cols;
-    double row1, col1, row2, col2, row3, col3, direction;
+    float row1, col1, row2, col2, row3, col3, direction;
 
     for (int y = 0; y<rowsMat; y++){
         for(int x =0; x<colsMat; x++){
-            direction = this->oMap_basic.at<double>(y,x)+CV_PI/2;
+            direction = this->oMap_basic.at<float>(y,x)+CV_PI/2;
             row1 = y*this->blockSize+this->blockSize/2+paddingY/2;
             col1 = x*this->blockSize+this->blockSize/2+paddingX/2;
             row2 = row1 - sin(direction)*this->blockSize/2;

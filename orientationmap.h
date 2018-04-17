@@ -17,7 +17,8 @@ public:
     explicit OrientationMap(QObject *parent = nullptr);
 
     void setParams(const cv::Mat &imgFingerprint_, int &blockSize_, GAUSSIAN_BLUR_SETTINGS &gaussBlurBasic_, GAUSSIAN_BLUR_SETTINGS &gaussBlurAdvanced_);
-    void computeAdvancedMap();
+    void computeAdvancedMapCPU();
+    void computeAdvancedMapGPU();
     void drawBasicMap(const cv::Mat &imgOriginal);
 
     //getNset
@@ -42,6 +43,8 @@ private:
     cv::Mat oMap_basic; // BASIC smerova mapa (vyhladena, jeden smer pre cely blok)
     af::array oMapAF_basic;
     cv::Mat oMap_advanced; // ADVANCED smerova mapa (vyhladena, kazdy pixel ma svoj smer)
+    af::array oMapAF_advanced;
+
     cv::Mat imgOMap_basic; // obrazok BASIC smerovej mapy (ADVANCED mapa sa neda zobrazit, lebo kazdy pixel ma iny smer)
 
     float duration;
