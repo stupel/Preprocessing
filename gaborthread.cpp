@@ -19,13 +19,13 @@ void GaborThread::enhanceFragmentSlot(const bool &useFrequencyMap)
 
     for(int i = this->rect.y; i < this->rect.y + this->rect.height; i++){
         for(int j = this->rect.x; j < this->rect.x + this->rect.width; j++){
-            if (useFrequencyMap) kernel = cv::getGaborKernel(cv::Size(this->blockSize,this->blockSize), this->sigma, this->oMap.at<double>(i,j), this->fMap.at<double>(i,j), 1, 0, CV_64F);
-            else kernel = cv::getGaborKernel(cv::Size(this->blockSize,this->blockSize), this->sigma, this->oMap.at<double>(i,j), this->lambda, 1, 0, CV_64F);
+            if (useFrequencyMap) kernel = cv::getGaborKernel(cv::Size(this->blockSize,this->blockSize), this->sigma, this->oMap.at<float>(i,j), this->fMap.at<float>(i,j), 1, 0, CV_32F);
+            else kernel = cv::getGaborKernel(cv::Size(this->blockSize,this->blockSize), this->sigma, this->oMap.at<float>(i,j), this->lambda, 1, 0, CV_32F);
             subMat = this->img(cv::Rect(j-this->blockSize/2, i-this->blockSize/2, this->blockSize, this->blockSize));
-            subMat.convertTo(sub, CV_64F);
+            subMat.convertTo(sub, CV_32F);
             cv::multiply(sub, kernel, sub);
             s = cv::sum(sub);
-            this->enhancedImage.at<double>(i,j) = s[0];
+            this->enhancedImage.at<float>(i,j) = s[0];
         }
     }
     emit enhancementDoneSignal();

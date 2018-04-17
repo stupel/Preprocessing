@@ -23,8 +23,8 @@ private:
     cv::Mat oMap; // smerova mapa odtlacku
     cv::Mat fMap; // frekvencna mapa odtlacku
     int blockSize; // velkost bloku pre filtrovanie
-    double sigma; // sigma
-    double lambda; // lambda
+    float sigma; // sigma
+    float lambda; // lambda
     cv::Rect rect; // oblast odtlacku, ktoru prefiltruje konkretne vlakno
     cv::Mat enhancedImage; // prefiltrovany odtlacok
 

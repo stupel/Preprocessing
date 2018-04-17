@@ -19,7 +19,7 @@ void GaborFilterMultiThread::setParams(cv::Mat img_, cv::Mat orientationMap_, cv
 void GaborFilterMultiThread::enhance(const bool &useFrequencyMap)
 {
     this->threadsFinished = 0; // na zaciatku paralelneho filtrovania nastavujem pocet ukoncenych vlakien na 0
-    this->imgEnhanced = cv::Mat(this->imgFp.rows,this->imgFp.cols, CV_64F, cv::Scalar::all(255));
+    this->imgEnhanced = cv::Mat(this->imgFp.rows,this->imgFp.cols, CV_32F, cv::Scalar::all(255));
 
     QVector<GaborThread*> gaborThreads; // vlakna na paralelne filtrovanie
     threads.clear(); // vymazu sa predchadzajuce vlakna
