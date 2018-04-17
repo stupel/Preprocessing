@@ -26,10 +26,10 @@ private:
     cv::Mat imgEnhanced;
 
     int blockSize;
-    double sigma;
-    double lambda;
-    double gamma;
-    double psi;
+    float sigma;
+    float lambda;
+    float gamma;
+    float psi;
 
     int origWidth;
     int origHeight;
@@ -37,6 +37,7 @@ private:
     float duration;
 
     af::array getGaborKernel(const af::array& oMap);
+    void showImg(const af::array&, const char*);
 };
 
 #endif // GABORFILTERGPU_H

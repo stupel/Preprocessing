@@ -11,16 +11,25 @@ GaborFilterGPU::GaborFilterGPU()
     this->psi = 0;
 }
 
+void GaborFilterGPU::showImg(const af::array & afmat, const char* text)
+{
+    af::Window window(afmat.dims(0), afmat.dims(1), text);
+    do{
+        window.image(afmat);
+    } while( !window.close() );
+}
+
 void GaborFilterGPU::setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, int blockSize_, double sigma_, double lambda_, bool useFrequencyMap, const cv::Mat &frequencyMap_)
 {
-    Helper::mat2array_float(img_, this->imgFp);
-    Helper::mat2array_double(orientationMap_, this->oMap);
+    this->imgFp = Helper::mat_uchar2array_float(img_);
+    this->oMap = Helper::mat_float2array_float(orientationMap_);
+
     this->blockSize = blockSize_;
     this->sigma = sigma_;
     this->lambda = lambda_;
 
     this->useFrequencyMap = useFrequencyMap;
-    if (useFrequencyMap) Helper::mat2array_double(frequencyMap_, this->fMap);
+    if (useFrequencyMap) this->fMap = Helper::mat_double2array_double(frequencyMap_);
 
     this->origWidth = img_.cols;
     this->origHeight = img_.rows;
@@ -34,7 +43,7 @@ af::array GaborFilterGPU::getGaborKernel(const af::array& oMap)
     af::array xciara = xarr * af::cos(thetaarr) + yarr * af::sin(thetaarr);
     af::array yciara = -xarr * af::sin(thetaarr) + yarr * af::cos(thetaarr);
     af::array nom1;
-    double denom1;
+    float denom1;
     nom1 = xciara * xciara + this->gamma * this->gamma * yciara * yciara;
     denom1 = 2 * this->sigma * this->sigma;
     af::array exp1 = af::exp(-nom1 / denom1);
@@ -104,10 +113,13 @@ void GaborFilterGPU::enhance()
     // 6. PIXEL REORGANIZATION
     output = af::moddims(holder, ty, tx);
 
+
     // 7. EXPORT
     Helper::af_normalizeImage(output);
     this->imgEnhanced = cv::Mat(this->origHeight, this->origWidth, CV_8UC1);
-    Helper::array2mat(output, this->imgEnhanced);
+    this->imgEnhanced = Helper::array_uchar2mat_uchar(output);
+
+    //this->imgEnhanced = Helper::arrayu8TOmat8u(output);
 
     this->duration = af::timer::stop() * 1000; // s to ms
 }
