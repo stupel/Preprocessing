@@ -115,10 +115,8 @@ void Preprocessing::setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBl
     this->isMaskModelLoaded = false;
 }
 
-void Preprocessing::setPreprocessingParams(int numThreads, int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)
+void Preprocessing::setPreprocessingParams(int blockSize, double gaborLambda, double gaborSigma, int gaussBlockBasic, double gaussSigmaBasic, int gaussBlockAdvanced, double gaussSigmaAdvanced, int holeSize)
 {
-    if (numThreads == 0) this->numThreads = QThread::idealThreadCount();
-    else this->numThreads = numThreads;
     this->blockSize = blockSize;
     this->gaborLambda = gaborLambda;
     this->gaborSigma = gaborSigma;
@@ -138,10 +136,13 @@ void Preprocessing::setFeatures(bool useAdvancedMode, bool useContrastEnhancemen
     this->useFrequencyMap = useFrequencyMap;
 }
 
-void Preprocessing::setCPUOnly(bool enabled)
+void Preprocessing::setCPUOnly(bool enabled, int numThreads)
 {
     if (enabled) this->cpuOnly = true;
     else this->cpuOnly = false;
+
+    if (numThreads == 0) this->numThreads = QThread::idealThreadCount();
+    else this->numThreads = numThreads;
 }
 
 void Preprocessing::start()
