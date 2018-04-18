@@ -2,17 +2,20 @@
 Fingerprint preprocessing module for DBOX
 
 **Dependencies:**  
-- OpenCV 3.4.1 (https://github.com/opencv/opencv)  
-- Caffe 1.0 (https://github.com/BVLC/caffe)  
-- ArrayFire 3.5.1 (https://arrayfire.com/download/)  
-- CUDA 9.1 (https://developer.nvidia.com/cuda-downloads)  
+- [OpenCV 3.4.1](https://github.com/opencv/opencv)  
+- [Caffe 1.0](https://github.com/BVLC/caffe)  
+- [ArrayFire 3.5.1](https://arrayfire.com/download/)  
+- [CUDA 9.1 (minimum 8.0)](https://developer.nvidia.com/cuda-downloads) 
+- [cuDNN 7.1](https://developer.nvidia.com/rdp/cudnn-download)
+- [Qt5 / Qt Creator 4](https://www.qt.io/download)  
 
 *The mentioned versions are recommended*  
   
 **Getting Started:**  
-1. Build and run the project to generate .so (.dll / .lib) files  
-2. Include the library and header files to your own application  
-3. Copy the 'core' folder to your root project directory  
+1. You need to provide valid paths to these libraries and their header files in ```.pro``` file.
+2. Build and run the project to generate .so (.dll / .lib) files  
+3. Include the library and header files to your own application  
+4. Copy the 'core' folder to your root project directory  
   
 <br />  
 
@@ -46,4 +49,6 @@ preprocessingDoneSignal(PREPROCESSING_RESULTS results);
 preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);  
   
 preprocessingErrorSignal(int errorcode);  
-```
+```  
+To get *preprocessingAdvancedDoneSignal* the **advancedMode** has to be enabled  
+To get *preprocessingDoneSignal* the **advancedMode** has to be disabled  
