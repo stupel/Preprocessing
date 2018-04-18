@@ -26,6 +26,7 @@ public:
     cv::Mat getOMap_basic() const;
     cv::Mat getImgOMap_basic() const;
     float getDuration() const;
+    af::array getOMapAF_advanced() const;
 
 private:
 

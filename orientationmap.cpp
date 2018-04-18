@@ -136,6 +136,11 @@ void OrientationMap::computeBasicMapGPU()
     this->duration = af::timer::stop() * 1000;
 }
 
+af::array OrientationMap::getOMapAF_advanced() const
+{
+    return oMapAF_advanced;
+}
+
 cv::Mat OrientationMap::getOMap_basic() const
 {
     return oMap_basic;
