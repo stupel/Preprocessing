@@ -28,11 +28,11 @@ void start();
   
 Optional:  
 ```cpp
-void setPreprocessingParams(int numThreads, int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);  
+void setPreprocessingParams(int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);  
   
 void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useHoleRemover = true, bool useOrientationFixer = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);  
 
-void setCPUOnly(bool enabled);  
+void setCPUOnly(bool enabled, int numThreads = 0);  
   
 void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);  
   
