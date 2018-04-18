@@ -9,7 +9,7 @@ Fingerprint preprocessing module for DBOX
 - [cuDNN 7.1](https://developer.nvidia.com/rdp/cudnn-download)
 - [Qt5 / Qt Creator 4](https://www.qt.io/download)  
 
-*The mentioned versions are recommended*  
+*The mentioned or newer versions are recommended*  
   
 **Getting Started:**  
 1. You need to provide valid paths to these libraries and their header files in ```.pro``` file.
