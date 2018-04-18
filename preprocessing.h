@@ -55,7 +55,8 @@ class PREPROCESSINGSHARED_EXPORT Preprocessing : public QObject
     Q_OBJECT
 
 public:
-    Preprocessing();    
+    Preprocessing();
+    void start();
 
     void loadImg(cv::Mat imgOriginal);
     void setPreprocessingParams(int numThreads, int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
@@ -63,7 +64,6 @@ public:
     void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
     void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
     void setCPUOnly(bool enabled);
-    void start();
 
     PREPROCESSING_ALL_RESULTS getResults() const;
     PREPROCESSING_DURATIONS getDurations() const;
@@ -82,6 +82,7 @@ private:
     QTime timer;
 
     cv::Mat imgOriginal;
+    af::array advancedOMap;
 
     PREPROCESSING_ALL_RESULTS results;
     PREPROCESSING_DURATIONS durations;
@@ -100,6 +101,8 @@ private:
     bool useMask;
     bool useOrientationFixer;
     bool useQualityMap;
+
+    bool cpuOnly;
 
     bool firstRun;
     bool imgLoaded;
@@ -121,9 +124,6 @@ private:
     void continueAfterGabor();
     int preprocessingError(int errorcode);
     void clean();
-    
-    int currentSize, precSize;
-
 
 private slots:
     void allGaborThreadsFinished();

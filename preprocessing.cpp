@@ -5,6 +5,8 @@ Preprocessing::Preprocessing()
     this->imgLoaded = false;
     this->firstRun = true;
 
+    this->cpuOnly = false;
+
     //preprocessingFeatures Default
     this->advancedMode = false;
     this->numThreads = QThread::idealThreadCount();
@@ -40,8 +42,8 @@ Preprocessing::Preprocessing()
     this->freqFiles.trained = "./core/config/Caffe/frequency.caffemodel";
     this->freqFiles.imageMean = "./core/config/Caffe/frequency_imagemean.binaryproto";
     this->freqFiles.label = "./core/config/Caffe/frequency_labels.txt";
-    this->freqBlockSize = 9;           //!!!!!!!??????????
-    this->freqExBlockSize = 30;        //!!!!!!!??????????
+    this->freqBlockSize = 9;
+    this->freqExBlockSize = 30;
     this->isMaskModelLoaded = false;
 
     //CONNECTS
@@ -138,16 +140,8 @@ void Preprocessing::setFeatures(bool useAdvancedMode, bool useContrastEnhancemen
 
 void Preprocessing::setCPUOnly(bool enabled)
 {
-    if (enabled) {
-        #ifndef CPU_ONLY
-            #define CPU_ONLY
-        #endif
-    }
-    else {
-        #ifdef CPU_ONLY
-            #undef CPU_ONLY
-        #endif
-    }
+    if (enabled) this->cpuOnly = true;
+    else this->cpuOnly = false;
 }
 
 void Preprocessing::start()
@@ -160,8 +154,9 @@ void Preprocessing::start()
         if (this->useMask) {
             if (!this->isMaskModelLoaded) mask.loadMaskModel(this->maskFiles);
 
+            this->mask.setParams(this->imgOriginal, this->maskBlockSize, this->maskExBlockSize, this->maskUseSmooth, this->cpuOnly);
             this->timer.start();
-            mask.generate(this->imgOriginal, this->maskBlockSize, this->maskExBlockSize, this->maskUseSmooth);
+            this->mask.generate();
             this->durations.mask = this->timer.elapsed();
             this->results.imgMask = mask.getImgMask();
         }
@@ -182,8 +177,9 @@ void Preprocessing::start()
         if (this->useFrequencyMap) {
             if (!this->isFrequencyModelLoaded) fMap.loadFrequencyMapModel(this->freqFiles);
 
+            this->fMap.setParams(this->imgOriginal, this->freqBlockSize, this->freqExBlockSize, this->useMask);
             this->timer.start();
-            fMap.generate(this->imgOriginal, this->freqBlockSize, this->freqExBlockSize);
+            this->fMap.generate();
             this->durations.frequencyMap = this->timer.elapsed();
 
             this->results.frequencyMap = fMap.getFrequencyMap();
@@ -201,15 +197,15 @@ void Preprocessing::start()
         }
         else this->oMap.setParams(this->imgOriginal, this->blockSize, this->gaussBlurBasic, this->gaussBlurAdvanced);
 
-        this->timer.start();
-
-        #ifdef CPU_ONLY
+        if (this->cpuOnly) {
             this->oMap.computeAdvancedMapCPU();
-        #else
+        }
+        else {
             this->oMap.computeAdvancedMapGPU();
-        #endif
+            this->advancedOMap = this->oMap.getOMapAF_advanced();
+        }
 
-        this->durations.orientationMap = this->timer.elapsed();
+        this->durations.orientationMap = this->oMap.getDuration();
         this->results.orientationMap = this->oMap.getOMap_advanced();
 
         if (this->advancedMode) {
@@ -217,36 +213,26 @@ void Preprocessing::start()
             this->results.imgOrientationMap = this->oMap.getImgOMap_basic();
         }
 
-        #ifndef CPU_ONLY
-        // GABOR FILTER GPU
-        if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
-        else this->gaborGPU.setParams(this->imgOriginal, this->oMap.getOMap_basic(), this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
+        if (!this->cpuOnly) {
+            // GABOR FILTER GPU
+            if (this->useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->advancedOMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
+            else this->gaborGPU.setParams(this->imgOriginal, this->advancedOMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->useFrequencyMap, this->results.frequencyMap);
 
-        this->gaborGPU.enhance();
-        this->durations.gaborFilter = this->gaborGPU.getDuration();
+            this->gaborGPU.enhanceWithAdvancedOMAP();
+            this->durations.gaborFilter = this->gaborGPU.getDuration();
 
-        this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
-        this->continueAfterGabor();
-
-        #else
-        // GABOR FILTER CPU MULTITHREAD
-        if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
-        else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
-        this->timer.start();
-        this->gaborMultiThread.enhance(this->useFrequencyMap); // filtrovanie so zvolenym typom smerovej mapy
-        #endif
+            this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
+            this->continueAfterGabor();
+        }
+        else {
+            // GABOR FILTER CPU MULTITHREAD
+            if (this->useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+            else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->results.frequencyMap, this->blockSize, this->gaborSigma, this->gaborLambda, this->numThreads);
+            this->timer.start();
+            this->gaborMultiThread.enhance(this->useFrequencyMap); // filtrovanie so zvolenym typom smerovej mapy
+        }
     }
     else this->preprocessingError(10);
-}
-
-PREPROCESSING_ALL_RESULTS Preprocessing::getResults() const
-{
-    return results;
-}
-
-PREPROCESSING_DURATIONS Preprocessing::getDurations() const
-{
-    return durations;
 }
 
 void Preprocessing::allGaborThreadsFinished()
@@ -296,6 +282,7 @@ void Preprocessing::continueAfterGabor()
     emit preprocessingDurationSignal(this->durations);
 
     this->firstRun = false;
+
 }
 
 int Preprocessing::preprocessingError(int errorcode)
@@ -303,4 +290,14 @@ int Preprocessing::preprocessingError(int errorcode)
     emit preprocessingErrorSignal(errorcode);
 
     return -1;
+}
+
+PREPROCESSING_ALL_RESULTS Preprocessing::getResults() const
+{
+    return results;
+}
+
+PREPROCESSING_DURATIONS Preprocessing::getDurations() const
+{
+    return durations;
 }
