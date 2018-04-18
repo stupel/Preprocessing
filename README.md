@@ -38,6 +38,9 @@ void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool u
   
 void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);  
 ```
+Important notice:  
+```numThreads = 0``` means automatic ideal thread number  
+  
 <br />  
 
 **SIGNALS:**
