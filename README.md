@@ -50,5 +50,6 @@ preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
   
 preprocessingErrorSignal(int errorcode);  
 ```  
-To get *preprocessingAdvancedDoneSignal* the **advancedMode** has to be enabled  
-To get *preprocessingDoneSignal* the **advancedMode** has to be disabled  
+Important notice:  
+To get ```preprocessingAdvancedDoneSignal``` the *advancedMode* has to be enabled  
+To get ```preprocessingDoneSignal``` the *advancedMode* has to be disabled  
