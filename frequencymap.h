@@ -15,10 +15,17 @@ public:
     cv::Mat getImgFrequencyMap() const;
 
     void loadFrequencyMapModel(const CAFFE_FILES &freqFiles);
-    void generate(const cv::Mat &imgOriginal, const int &blockSize, const int &exBlockSize);
+    void setParams(const cv::Mat &imgOriginal, int blockSize, int exBlockSize, bool cpuOnly);
+
+    void generate();
 
 private:
     PreprocessingCaffeNetwork *frequencyClassifier;
+
+    cv::Mat imgOriginal;
+    int blockSize;
+    int exBlockSize;
+    bool cpuOnly;
 
     cv::Mat frequencyMap;
 

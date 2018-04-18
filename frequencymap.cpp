@@ -18,25 +18,29 @@ void FrequencyMap::loadFrequencyMapModel(const CAFFE_FILES &freqFiles)
     this->isFrequencyModelLoaded = true;
 }
 
-void FrequencyMap::generate(const cv::Mat &imgOriginal, const int &blockSize, const int &exBlockSize)
+void FrequencyMap::setParams(const cv::Mat &imgOriginal, int blockSize, int exBlockSize, bool cpuOnly)
 {
+    this->imgOriginal = imgOriginal;
+    this->blockSize = blockSize;
+    this->exBlockSize = exBlockSize;
+    this->cpuOnly = cpuOnly;
+}
 
-#ifdef CPU_ONLY
-    Caffe::set_mode(Caffe::CPU);
-#else
-    Caffe::set_mode(Caffe::GPU);
-#endif
+void FrequencyMap::generate()
+{
+    if (this->cpuOnly) Caffe::set_mode(Caffe::CPU);
+    else Caffe::set_mode(Caffe::GPU);
 
-    this->frequencyMap = cv::Mat(imgOriginal.rows + blockSize, imgOriginal.cols + blockSize, CV_8UC1);
+    this->frequencyMap = cv::Mat(this->imgOriginal.rows + this->blockSize, this->imgOriginal.cols + this->blockSize, CV_8UC1);
 
     cv::Mat lambdaBlock = cv::Mat(blockSize, blockSize, CV_8UC1);
     cv::Mat borderedOriginal;
-    cv::copyMakeBorder(imgOriginal, borderedOriginal, exBlockSize, exBlockSize, exBlockSize, exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+    cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->exBlockSize, this->exBlockSize, this->exBlockSize, this->exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
 
     std::vector<cv::Mat> blocks;
-    for (int x = exBlockSize; x < imgOriginal.cols + exBlockSize; x += blockSize) {
-        for (int y = exBlockSize; y < imgOriginal.rows + exBlockSize; y += blockSize) {
-            blocks.push_back(borderedOriginal.colRange(x, x + blockSize).rowRange(y, y + blockSize));
+    for (int x = this->exBlockSize; x < this->imgOriginal.cols + this->exBlockSize; x += this->blockSize) {
+        for (int y = this->exBlockSize; y < this->imgOriginal.rows + exBlockSize; y += this->blockSize) {
+            blocks.push_back(borderedOriginal.colRange(x, x + this->blockSize).rowRange(y, y + this->blockSize));
         }
     }
 
@@ -45,16 +49,16 @@ void FrequencyMap::generate(const cv::Mat &imgOriginal, const int &blockSize, co
 
     std::vector<Prediction> prediction;
     int cnt = 0;
-    for (int x = 0; x < imgOriginal.cols; x += blockSize) {
-        for (int y = 0; y < imgOriginal.rows; y += blockSize) {
+    for (int x = 0; x < this->imgOriginal.cols; x += this->blockSize) {
+        for (int y = 0; y < this->imgOriginal.rows; y += this->blockSize) {
             prediction = predictions[cnt];
             lambdaBlock.setTo(QString::fromStdString(prediction[0].first).toInt());
-            lambdaBlock.copyTo(this->frequencyMap(cv::Rect(x, y, blockSize, blockSize)));
+            lambdaBlock.copyTo(this->frequencyMap(cv::Rect(x, y, this->blockSize, this->blockSize)));
             cnt++;
         }
     }
 
-    this->frequencyMap = this->frequencyMap.rowRange(0, imgOriginal.rows).colRange(0, imgOriginal.cols);
+    this->frequencyMap = this->frequencyMap.rowRange(0, this->imgOriginal.rows).colRange(0, this->imgOriginal.cols);
 
     this->frequencyMap.convertTo(this->frequencyMap, CV_64F);
 

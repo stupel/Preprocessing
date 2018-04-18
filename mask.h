@@ -14,10 +14,17 @@ public:
     cv::Mat getImgMask() const;
 
     void loadMaskModel(const CAFFE_FILES &maskFiles);
-    void generate(cv::Mat imgOriginal, int blockSize, int exBlockSize, bool useSmooth);
+    void setParams(const cv::Mat &imgOriginal, int blockSize, int exBlockSize, bool useSmooth, bool cpuOnly);
+    void generate();
 
 private:
     PreprocessingCaffeNetwork *maskClassifier;
+
+    cv::Mat imgOriginal;
+    int blockSize;
+    int exBlockSize;
+    bool useSmooth;
+    bool cpuOnly;
 
     cv::Mat imgMask;
 
