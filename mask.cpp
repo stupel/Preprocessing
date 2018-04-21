@@ -27,7 +27,7 @@ void Mask::setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams)
 void Mask::generate()
 {
 
-    if (this->mask.cpuOnly) Caffe::set_mode(Caffe::CPU);
+    if (*this->mask.cpuOnly) Caffe::set_mode(Caffe::CPU);
     else Caffe::set_mode(Caffe::GPU);
 
     this->imgMask = cv::Mat::zeros(this->imgOriginal.rows + this->mask.blockSize, this->imgOriginal.cols + this->mask.blockSize, CV_8UC1);

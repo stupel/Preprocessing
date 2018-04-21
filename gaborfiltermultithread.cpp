@@ -32,14 +32,14 @@ void GaborFilterMultiThread::enhance()
 
         connect(threads.last(), SIGNAL(finished()), gaborThreads.last(), SLOT(deleteLater()));
         connect(threads.last(), SIGNAL(finished()), threads.last(), SLOT(deleteLater()));
-        connect(gaborThreads.last(), SIGNAL(enhanceFragmentSignal(bool)), gaborThreads.last(), SLOT(enhanceFragmentSlot(bool)));
+        connect(gaborThreads.last(), SIGNAL(enhanceFragmentSignal()), gaborThreads.last(), SLOT(enhanceFragmentSlot()));
         connect(gaborThreads.last(), SIGNAL(enhancementDoneSignal()), this, SLOT(oneGaborThreadFinished()));
         connect(gaborThreads.last(), SIGNAL(enhancementDoneSignal()), gaborThreads.last(), SLOT(enhancementDoneSlot()));
         threads.last()->start(); // vlakno vstupi do event loop-u
 
         // paralelne filtrovanie odtlacku
         // funguje to tak, ze jednotlive vlakna si zdielaju 1 odtlacok a kazde filtruje len urcitu cast
-        emit gaborThreads.last()->enhanceFragmentSignal(this->gabor.useFrequencyMap); // vyslanie signalu na zacatie filtrovania
+        emit gaborThreads.last()->enhanceFragmentSignal(); // vyslanie signalu na zacatie filtrovania
     }
 }
 

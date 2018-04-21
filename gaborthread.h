@@ -16,7 +16,7 @@ public slots:
 
 signals:
     void enhancementDoneSignal();
-    void enhanceFragmentSignal(const bool &useFrequencyMap);
+    void enhanceFragmentSignal();
 
 private:
     cv::Mat imgInput; // obrazok s odtlackom

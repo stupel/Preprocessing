@@ -26,7 +26,7 @@ void FrequencyMap::setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmap
 
 void FrequencyMap::generate()
 {
-    if (this->fmap.cpuOnly) Caffe::set_mode(Caffe::CPU);
+    if (*this->fmap.cpuOnly) Caffe::set_mode(Caffe::CPU);
     else Caffe::set_mode(Caffe::GPU);
 
     this->frequencyMap = cv::Mat(this->imgOriginal.rows + this->fmap.blockSize, this->imgOriginal.cols + this->fmap.blockSize, CV_8UC1);
@@ -58,7 +58,7 @@ void FrequencyMap::generate()
 
     this->frequencyMap = this->frequencyMap.rowRange(0, this->imgOriginal.rows).colRange(0, this->imgOriginal.cols);
 
-    this->frequencyMap.convertTo(this->frequencyMap, CV_64F);
+    this->frequencyMap.convertTo(this->frequencyMap, CV_32FC1);
 
     cv::GaussianBlur(this->frequencyMap, this->frequencyMap, cv::Size(121, 121), 10.0, 10.0);
 }
