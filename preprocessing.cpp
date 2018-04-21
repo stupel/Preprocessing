@@ -238,16 +238,14 @@ void Preprocessing::start()
             this->results.orientationMap = this->oMap.getOMap_advanced();
         }
         else {
+            this->oMap.computeAdvancedMapGPU();
             if (this->features.useAdvancedOrientationMap) {
-                this->oMap.computeAdvancedMapGPU();
                 this->orientationMapAF = this->oMap.getOMapAF_advanced();
-                this->results.orientationMap = this->oMap.getOMap_advanced();
             }
             else {
-                this->oMap.computeBasicMapGPU();
                 this->orientationMapAF = this->oMap.getOMapAF_basic();
-                this->results.orientationMap = this->oMap.getOMap_basic();
             }
+            this->results.orientationMap = this->oMap.getOMap_advanced();
         }
 
         this->durations.orientationMap = this->oMap.getDuration();

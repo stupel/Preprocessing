@@ -38,55 +38,56 @@ void GaborFilterGPU::enhanceWithBasicOMap()
     // TIMER
     af::timer::start();
 
-    af::array kernels; // Gabor kernely
-    af::array unwrapped_img = af::constant(255, this->gabor.blockSize * this->oMap.dims(0) + this->gabor.blockSize - 1, this->gabor.blockSize * this->oMap.dims(1) + this->gabor.blockSize - 1); // po blokoch rozdeleny a unwrapovany odtlacok pripraveny na filtrovanie
-    af::array unwrapped_img_init; // pomocny orezany obraz
-    af::array output; // prefiltrovany odtlacok v rozsahu 0-255
-    af::array ThetaFlat; // jednoriadkova smerova mapa
+    int width = floor(this->imgInput.dims(1) / this->gabor.blockSize);
+    int height = floor(this->imgInput.dims(0) / this->gabor.blockSize);
+    int paddingWidth = this->imgInput.dims(1) - width * this->gabor.blockSize;
+    int paddingHeight = this->imgInput.dims(0) - height * this->gabor.blockSize;
 
-    int ThetaFlatElems; // pocet prvkov smerovej mapy
+    int origHeight = this->imgInput.dims(0);
+    int origWidth = this->imgInput.dims(1);
+
+    this->imgInput = this->imgInput(af::seq(paddingHeight/2, height*this->gabor.blockSize+paddingHeight/2-1), af::seq(paddingWidth/2, width*this->gabor.blockSize+paddingWidth/2-1));
+
+    int cutHeight = this->imgInput.dims(0);
+    int cutWidth = this->imgInput.dims(1);
+
     int tx = this->oMap.dims(1) * this->gabor.blockSize;
     int ty = this->oMap.dims(0) * this->gabor.blockSize;
     int ttx = this->oMap.dims(1);
     int tty = this->oMap.dims(0);
 
-    // 1. IMAGE CUT + UNWRAP
-    unwrapped_img_init = this->imgInput(af::seq(ty) , af::seq(tx)); // orezanie obrazu
+    this->imgInput = af::unwrap(this->imgInput , this->gabor.blockSize, this->gabor.blockSize, 1, 1, this->gabor.blockSize/2, this->gabor.blockSize/2);
 
-    af::copy(unwrapped_img,
-             unwrapped_img_init,
-             af::seq(this->gabor.blockSize / 2, this->gabor.blockSize / 2 + unwrapped_img_init.dims(0) - 1),
-             af::seq(this->gabor.blockSize / 2, this->gabor.blockSize / 2 + unwrapped_img_init.dims(1) - 1));
-    unwrapped_img = af::unwrap(unwrapped_img, this->gabor.blockSize, this->gabor.blockSize, 1, 1, 0, 0);
+    this->oMap = af::flat(this->oMap);
 
-    // 2. GABOR KERNELS
-    ThetaFlat = af::flat(this->oMap);
-    ThetaFlatElems = ThetaFlat.elements();
-    kernels = af::array(this->gabor.blockSize, this->gabor.blockSize, ThetaFlatElems);
-    gfor(af::seq i, ThetaFlatElems){
-        kernels(af::span, af::span, i) = this->getGaborKernel(ThetaFlat(i));
+    af::array kernels(this->gabor.blockSize, this->gabor.blockSize, this->oMap.elements());
+    gfor(af::seq i, this->oMap.elements()){
+        kernels(af::span, af::span, i) = this->getGaborKernel(this->oMap(i));
     }
 
-    // 3. PREPARING GABOR KERNELS
-    kernels = af::moddims(kernels, this->gabor.blockSize * this->gabor.blockSize, ThetaFlatElems); // 3D kernely do 2D unwrapovanych kernelov
+    kernels = af::moddims(kernels, this->gabor.blockSize * this->gabor.blockSize, this->oMap.elements()); // 3D kernely do 2D unwrapovanych kernelov
     kernels = af::tile(kernels, this->gabor.blockSize);
-    kernels = af::moddims(kernels, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize*tty, 1, ttx);
+    kernels = af::moddims(kernels, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize * tty, 1, ttx);
 
-    // 4. MULTIPLICATION
-    unwrapped_img = af::moddims(unwrapped_img, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize * this->gabor.blockSize*tty, 1, ttx);
-    unwrapped_img = af::moddims(unwrapped_img, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize*tty, this->gabor.blockSize, ttx);
-    unwrapped_img = unwrapped_img *  af::tile(kernels, 1, 1, this->gabor.blockSize);
-    unwrapped_img = af::moddims(unwrapped_img, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize * this->gabor.blockSize * tty * ttx);
+    this->imgInput = af::moddims(this->imgInput, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize * this->gabor.blockSize*tty, 1, ttx);
+    this->imgInput = af::moddims(this->imgInput, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize*tty, this->gabor.blockSize, ttx);
+    this->imgInput = this->imgInput *  af::tile(kernels, 1, 1, this->gabor.blockSize);
+    this->imgInput = af::moddims(this->imgInput, this->gabor.blockSize * this->gabor.blockSize, this->gabor.blockSize * this->gabor.blockSize * tty * ttx);
 
-    // 5. SUM
-    af::array holder = af::sum(unwrapped_img.T(), 1);
+    this->imgInput = af::sum(this->imgInput.T(), 1);
 
     // 6. PIXEL REORGANIZATION
-    output = af::moddims(holder, ty, tx);
+    af::array output = af::moddims(this->imgInput, ty, tx);
 
-    // 7. EXPORT
+    // Create and resize Mat to the original size
     Helper::af_normalizeImage(output);
-    this->imgEnhanced = Helper::array_uchar2mat_uchar(output);
+    this->imgEnhanced = cv::Mat(origHeight, origWidth, CV_8UC1);
+    Helper::array_uchar2mat_uchar(output).copyTo(this->imgEnhanced(cv::Rect(paddingWidth/2, paddingHeight/2, cutWidth, cutHeight)));
+
+    // Resize the orientation map to the original size
+    cv::Mat oMapCV(origHeight, origWidth, CV_32FC1);
+    this->gabor.oMap->copyTo(oMapCV(cv::Rect(paddingWidth/2, paddingHeight/2, cutWidth, cutHeight)));
+    *this->gabor.oMap = oMapCV.clone();
 
     this->duration = af::timer::stop() * 1000; // s to ms
 }
@@ -95,8 +96,8 @@ void GaborFilterGPU::enhanceWithAdvancedOMap(){
     // TIMER
     af::timer::start();
 
-    int height = floor(this->imgInput.dims(0) / this->gabor.blockSize);
     int width = floor(this->imgInput.dims(1) / this->gabor.blockSize);
+    int height = floor(this->imgInput.dims(0) / this->gabor.blockSize);
     int paddingWidth = this->imgInput.dims(1) - width * this->gabor.blockSize;
     int paddingHeight = this->imgInput.dims(0) - height * this->gabor.blockSize;
 
@@ -110,7 +111,7 @@ void GaborFilterGPU::enhanceWithAdvancedOMap(){
 
     this->imgInput = af::unwrap(this->imgInput , this->gabor.blockSize, this->gabor.blockSize, 1, 1, this->gabor.blockSize/2, this->gabor.blockSize/2);
 
-    this->oMap = af::moddims(this->oMap,1, this->oMap.dims(0)*this->oMap.dims(1));
+    this->oMap = af::moddims(this->oMap, 1, this->oMap.dims(0) * this->oMap.dims(1));
 
     af::array kernels(this->gabor.blockSize, this->gabor.blockSize, this->oMap.elements());
     gfor(af::seq i, this->oMap.elements()){
@@ -121,7 +122,7 @@ void GaborFilterGPU::enhanceWithAdvancedOMap(){
 
     af::array output = kernels * this->imgInput;
     output = af::sum(output);
-    output  = af::moddims(output,cutHeight, cutWidth );
+    output = af::moddims(output,cutHeight, cutWidth );
 
     // Create and resize Mat to the original size
     Helper::af_normalizeImage(output);
