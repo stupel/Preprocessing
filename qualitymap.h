@@ -269,7 +269,7 @@ public:
     // *********   interface functions   *********//
 
     explicit QualityMap(QObject *parent = nullptr);
-    void loadImage(QImage img, int ppi); // loads input image
+    void setParams(const QImage &img, QMAP_PARAMS qmapParams); // loads input image
     void computeQualityMap(); // computes quality map
     void computeQualityMapMinutiae(MINUTIAE_VECTOR& minutiae); // computes quality map and assigns quality to minutiae
     int *getQuality_map() const;

@@ -15,7 +15,7 @@ public:
     cv::Mat getImgFrequencyMap() const;
 
     void loadFrequencyMapModel(const CAFFE_FILES &freqFiles);
-    void setParams(const cv::Mat &imgOriginal, int blockSize, int exBlockSize, bool cpuOnly);
+    void setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmapParams, const bool &cpuOnly);
 
     void generate();
 
@@ -23,8 +23,7 @@ private:
     PreprocessingCaffeNetwork *frequencyClassifier;
 
     cv::Mat imgOriginal;
-    int blockSize;
-    int exBlockSize;
+    FMAP_PARAMS fmap;
     bool cpuOnly;
 
     cv::Mat frequencyMap;

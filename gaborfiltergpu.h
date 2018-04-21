@@ -10,8 +10,8 @@ class GaborFilterGPU : public QObject
 public:
     GaborFilterGPU();
 
-    void setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, int blockSize_, double sigma_, double lambda_, bool useFrequencyMap, const cv::Mat &frequencyMap_);
-    void setParams(const cv::Mat &img_, const af::array &orientationMap_, int blockSize_, double sigma_, double lambda_, bool useFrequencyMap, const cv::Mat &frequencyMap_);
+    void setParams(const cv::Mat &img_, const cv::Mat &orientationMap_, const GABOR_PARAMS &gaborParams);
+    void setParams(const cv::Mat &img_, const af::array &orientationMap_, const GABOR_PARAMS &gaborParams);
     void enhanceWithBaseOMap();
     void enhanceWithAdvancedOMAP();
 
@@ -21,25 +21,19 @@ public:
 
 
 private:
-    af::array imgFp;
+
+    // INPUT
+    af::array imgInput;
     af::array oMap;
-
     af::array fMap;
-    bool useFrequencyMap ;
 
+    GABOR_PARAMS gabor;
+
+    // OUTPUT
     cv::Mat imgEnhanced;
-
-    int blockSize;
-    float sigma;
-    float lambda;
-    float gamma;
-    float psi;
-
-    int origWidth;
-    int origHeight;
-
     float duration;
 
+    // PRIVATE FUNCTIONS
     af::array getGaborKernel(const af::array& oMapPixel);
 };
 

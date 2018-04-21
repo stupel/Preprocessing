@@ -5,45 +5,43 @@ Binarization::Binarization(QObject *parent) : QObject(parent)
 
 }
 
-void Binarization::setParams(const cv::Mat &imgEnhanced, const bool &useMask, const cv::Mat &imgMask, const bool &useQMap, const cv::Mat &imgQMap)
+void Binarization::setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams, const PREPROCESSING_FEATURES &features)
 {
-    this->imgEnhanced_ = imgEnhanced;
-    this->useMask_ = useMask;
-    this->imgMask_ = imgMask;
-    this->useQMap_ = useQMap;
-    this->imgQMap_ = imgQMap;
+    this->imgEnhanced = imgEnhanced;
+    this->binarization = binarizationParams;
+    this->features = features;
 }
 
 void Binarization::binarizeGaussianBlur()
 {
-    this->imgBinarized = cv::Mat(this->imgEnhanced_.rows, this->imgEnhanced_.cols, this->imgEnhanced_.type());
-    cv::GaussianBlur(this->imgEnhanced_, this->imgBinarized, cv::Size(3,3), 1);
+    this->imgBinarized = cv::Mat(this->imgEnhanced.rows, this->imgEnhanced.cols, this->imgEnhanced.type());
+    cv::GaussianBlur(this->imgEnhanced, this->imgBinarized, cv::Size(3,3), 1);
     cv::threshold(this->imgBinarized, this->imgBinarized, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
 
-    if (this->useQMap_ || this->useMask_) this->deleteBackground();
+    if (this->features.useQualityMap || this->features.useMask) this->deleteBackground();
 }
 
 void Binarization::binarizeAdaptive()
 {
-    this->imgBinarized = cv::Mat(this->imgEnhanced_.rows, this->imgEnhanced_.cols, this->imgEnhanced_.type());
-    cv::adaptiveThreshold(this->imgEnhanced_, this->imgBinarized, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 21, 10);
+    this->imgBinarized = cv::Mat(this->imgEnhanced.rows, this->imgEnhanced.cols, this->imgEnhanced.type());
+    cv::adaptiveThreshold(this->imgEnhanced, this->imgBinarized, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 21, 10);
 
-    if (this->useQMap_ || this->useMask_) this->deleteBackground();
+    if (this->features.useQualityMap || this->features.useMask) this->deleteBackground();
 }
 
 void Binarization::deleteBackground()
 {
-    if (this->useQMap_) {
+    if (this->features.useQualityMap) {
         for (int x = 0; x < this->imgBinarized.cols; x++) {
             for (int y = 0; y < this->imgBinarized.rows; y++) {
-                if (this->imgQMap_.at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
+                if (this->binarization.imgQualityMap.at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
             }
         }
     }
-    else if (this->useMask_) {
+    else if (this->features.useMask) {
         for (int x = 0; x < this->imgBinarized.cols; x++) {
             for (int y = 0; y < this->imgBinarized.rows; y++) {
-                if (this->imgMask_.at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
+                if (this->binarization.imgMask.at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
             }
         }
     }
@@ -62,7 +60,7 @@ void Binarization::removeHoles(double holeSize)
     // odstranujem vsetky velke diery, zostanu len male diery - potne pory a nedokonalosti
     for (std::vector<std::vector<cv::Point> >::iterator it = contours.begin(); it!=contours.end(); )
     {
-        if (it->size()>holeSize)
+        if (it->size() > holeSize)
             it=contours.erase(it);
         else
             ++it;

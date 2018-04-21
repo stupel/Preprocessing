@@ -16,6 +16,7 @@
 #include "qualitymap.h"
 
 typedef struct preprocessing_all_results {
+    cv::Mat imgOriginal;
     cv::Mat imgContrastEnhanced;
     cv::Mat imgEnhanced; // obrazok po prefiltrovani
     cv::Mat imgOrientationMap; // obrazok smerovej mapy
@@ -31,6 +32,7 @@ typedef struct preprocessing_all_results {
 } PREPROCESSING_ALL_RESULTS;
 
 typedef struct preprocessing_results {
+    cv::Mat imgOriginal;
     cv::Mat imgSkeleton;
     cv::Mat imgSkeletonInverted;
     cv::Mat qualityMap;
@@ -60,10 +62,10 @@ public:
 
     void loadImg(cv::Mat imgOriginal);
     void setPreprocessingParams(int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
-    void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useHoleRemover = true, bool useOrientationFixer = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
+    void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useHoleRemover = true, bool generateInvertedSkeleton = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
     void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
     void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
-    void setCPUOnly(bool enabled, int numThreads = 0);
+    void setCPUOnly(bool enabled, int threadNum = 0);
 
     PREPROCESSING_ALL_RESULTS getResults() const;
     PREPROCESSING_DURATIONS getDurations() const;
@@ -81,44 +83,32 @@ private:
 
     QTime timer;
 
+    // INPUT
     cv::Mat imgOriginal;
-    af::array advancedOMap;
 
+    // PARAMS
+    OMAP_PARAMS omapParams;
+    QMAP_PARAMS qmapParams;
+    FMAP_PARAMS fmapParams;
+    MASK_PARAMS maskParams;
+    CONTRAST_PARAMS contrastParams;
+    GABOR_PARAMS gaborParams;
+    BINARIZATION_PARAMS binarizationParams;
+
+    PREPROCESSING_FEATURES features;
+    PREPROCESSING_GENERAL general;
+
+    // OUTPUT
+    af::array advancedOMapAF;
     PREPROCESSING_ALL_RESULTS results;
     PREPROCESSING_DURATIONS durations;
 
-    bool advancedMode;
-
-    GAUSSIAN_BLUR_SETTINGS gaussBlurBasic, gaussBlurAdvanced;
-    double gaborLambda, gaborSigma;
-    int blockSize;
-    int numThreads;
-    int holeSize;
-
-    bool useContrastEnhancement;
-    bool useHoleRemover;
-    bool useFrequencyMap;
-    bool useMask;
-    bool useOrientationFixer;
-    bool useQualityMap;
-
-    bool cpuOnly;
-
+    // CHECKS
     bool firstRun;
     bool imgLoaded;
-
-    // Frequency Map
-    CAFFE_FILES freqFiles;
-    int freqBlockSize;
-    int freqExBlockSize;
     bool isFrequencyModelLoaded;
-
-    // Mask
-    CAFFE_FILES maskFiles;
-    int maskBlockSize;
-    int maskExBlockSize;
-    bool maskUseSmooth;
     bool isMaskModelLoaded;
+
 
     // PRIVATE FUNCTIONS
     void continueAfterGabor();

@@ -18,12 +18,10 @@ void Mask::loadMaskModel(const CAFFE_FILES &maskFiles)
     this->isMaskModelLoaded = true;
 }
 
-void Mask::setParams(const cv::Mat &imgOriginal, int blockSize, int exBlockSize, bool useSmooth, bool cpuOnly)
+void Mask::setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams, const bool &cpuOnly)
 {
     this->imgOriginal = imgOriginal;
-    this->blockSize = blockSize;
-    this->exBlockSize = exBlockSize;
-    this->useSmooth = useSmooth;
+    this->mask = maskParams;
     this->cpuOnly = cpuOnly;
 }
 
@@ -33,18 +31,18 @@ void Mask::generate()
     if (this->cpuOnly) Caffe::set_mode(Caffe::CPU);
     else Caffe::set_mode(Caffe::GPU);
 
-    this->imgMask = cv::Mat::zeros(this->imgOriginal.rows + this->blockSize, this->imgOriginal.cols + this->blockSize, CV_8UC1);
+    this->imgMask = cv::Mat::zeros(this->imgOriginal.rows + this->mask.blockSize, this->imgOriginal.cols + this->mask.blockSize, CV_8UC1);
 
-    cv::Mat whiteBlock = cv::Mat(this->blockSize, this->blockSize, CV_8UC1);
+    cv::Mat whiteBlock = cv::Mat(this->mask.blockSize, this->mask.blockSize, CV_8UC1);
     whiteBlock.setTo(255);
 
     cv::Mat borderedOriginal;
-    cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->exBlockSize, this->exBlockSize, this->exBlockSize, this->exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+    cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
 
     std::vector<cv::Mat> blocks;
-    for (int x = this->exBlockSize; x < this->imgOriginal.cols + this->exBlockSize; x += this->blockSize) {
-        for (int y = this->exBlockSize; y < this->imgOriginal.rows + this->exBlockSize; y += this->blockSize) {
-            blocks.push_back(borderedOriginal.colRange(x, x + this->blockSize).rowRange(y, y + this->blockSize));
+    for (int x = this->mask.exBlockSize; x < this->imgOriginal.cols + this->mask.exBlockSize; x += this->mask.blockSize) {
+        for (int y = this->mask.exBlockSize; y < this->imgOriginal.rows + this->mask.exBlockSize; y += this->mask.blockSize) {
+            blocks.push_back(borderedOriginal.colRange(x, x + this->mask.blockSize).rowRange(y, y + this->mask.blockSize));
         }
     }
 
@@ -53,11 +51,11 @@ void Mask::generate()
 
     std::vector<Prediction> prediction;
     int cnt = 0;
-    for (int x = 0; x < this->imgOriginal.cols; x += this->blockSize) {
-        for (int y = 0; y < this->imgOriginal.rows; y += this->blockSize) {
+    for (int x = 0; x < this->imgOriginal.cols; x += this->mask.blockSize) {
+        for (int y = 0; y < this->imgOriginal.rows; y += this->mask.blockSize) {
             prediction = predictions[cnt];
             if (prediction[0].first[0] == 'f') {
-                whiteBlock.copyTo(this->imgMask(cv::Rect(x, y, this->blockSize, this->blockSize)));
+                whiteBlock.copyTo(this->imgMask(cv::Rect(x, y, this->mask.blockSize, this->mask.blockSize)));
             }
             cnt++;
         }
@@ -65,12 +63,12 @@ void Mask::generate()
 
     this->imgMask = this->imgMask.rowRange(0, this->imgOriginal.rows).colRange(0, this->imgOriginal.cols);
 
-    if (useSmooth) {
+    if (this->mask.useSmooth) {
         QImage smoothedMask(this->imgMask.cols, this->imgMask.rows, QImage::Format_Grayscale8);
-        this->smooth(smoothedMask, this->blockSize);
+        this->smooth(smoothedMask, this->mask.blockSize);
 
         this->imgMask = Helper::QImage2Mat(smoothedMask, CV_8UC1);
-        cv::erode(this->imgMask, this->imgMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(this->blockSize, this->blockSize)), cv::Point(-1,-1), 1);
+        cv::erode(this->imgMask, this->imgMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(this->mask.blockSize, this->mask.blockSize)), cv::Point(-1,-1), 1);
     }
 }
 

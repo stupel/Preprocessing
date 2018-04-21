@@ -3,12 +3,6 @@
 
 #include "preprocessing_config.h"
 
-// nastavenia pre funkciu GaussianBlur, ktora sa pouziva na vyhladenie smerovej mapy
-typedef struct GaussianBlurSettings {
-    int blockSize;  // velkost bloku pre vyhladenie smerovej mapy (cez bloky)
-    double sigma;   // sigma pre vyhladenie smerovej mapy
-} GAUSSIAN_BLUR_SETTINGS;
-
 class OrientationMap : public QObject
 {
     Q_OBJECT
@@ -16,7 +10,7 @@ class OrientationMap : public QObject
 public:
     explicit OrientationMap(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgFingerprint_, int &blockSize_, GAUSSIAN_BLUR_SETTINGS &gaussBlurBasic_, GAUSSIAN_BLUR_SETTINGS &gaussBlurAdvanced_);
+    void setParams(const cv::Mat &imgInput, OMAP_PARAMS omap);
     void computeAdvancedMapCPU();
     void computeAdvancedMapGPU();
     void drawBasicMap(const cv::Mat &imgOriginal);
@@ -35,11 +29,10 @@ private:
 
     QTime timer;
 
-    cv::Mat imgFingerprint; // obrazok odtlacku
-    af::array imgFingerprintAF;
+    cv::Mat imgInput; // obrazok odtlacku
+    af::array imgInputAF;
 
-    int blockSize; // velkost bloku pre smerovu mapu
-    GAUSSIAN_BLUR_SETTINGS gaussBlurBasic, gaussBlurAdvanced;
+    OMAP_PARAMS omap;
 
     cv::Mat oMap_basic; // BASIC smerova mapa (vyhladena, jeden smer pre cely blok)
     af::array oMapAF_basic;

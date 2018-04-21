@@ -20,7 +20,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <vector>
-#include <numeric>      // std::accumulate
+#include <numeric>
 #include <fstream>
 #include <exception>
 #include <algorithm>
@@ -46,5 +46,73 @@
     } CAFFE_FILES;
 #define CAFFE_FILES_DEFINED
 #endif
+
+// nastavenia pre funkciu GaussianBlur, ktora sa pouziva na vyhladenie smerovej mapy
+typedef struct gaussian_blur_settings {
+    int blockSize;  // velkost bloku pre vyhladenie smerovej mapy (cez bloky)
+    float sigma;   // sigma pre vyhladenie smerovej mapy
+} GAUSSIAN_BLUR_SETTINGS;
+
+typedef struct omap_params {
+    int blockSize;
+    GAUSSIAN_BLUR_SETTINGS gaussBlurBasic;
+    GAUSSIAN_BLUR_SETTINGS gaussBlurAdvanced;
+} OMAP_PARAMS;
+
+typedef struct qmap_params {
+    int ppi;
+} QMAP_PARAMS;
+
+typedef struct fmap_params {
+    int blockSize;
+    int exBlockSize;
+    CAFFE_FILES caffeFiles;
+} FMAP_PARAMS;
+
+typedef struct mask_params {
+    int blockSize;
+    int exBlockSize;
+    bool useSmooth;
+    CAFFE_FILES caffeFiles;
+} MASK_PARAMS;
+
+typedef struct contrast_params {
+    int distance;
+    double sigma;
+    double gaussBlock;
+    double gaussSigma;
+} CONTRAST_PARAMS;
+
+typedef struct gabor_params {
+    int blockSize;
+    float sigma;
+    float lambda;
+    float gamma;
+    float psi;
+    int threadNums;
+    bool useFrequencyMap;
+    cv::Mat frequencyMap;
+} GABOR_PARAMS;
+
+typedef struct binarization_params {
+    cv::Mat imgQualityMap;
+    cv::Mat imgMask;
+    int holeSize;
+} BINARIZATION_PARAMS;
+
+typedef struct preprocessing_features {
+    bool advancedMode;
+    bool useContrastEnhancement;
+    bool useQualityMap;
+    bool useHoleRemover;
+    bool useMask;
+    bool useFrequencyMap;
+    bool generateInvertedSceleton;
+} PREPROCESSING_FEATURES;
+
+typedef struct preprocessing_general {
+    bool cpuOnly;
+    int threadNum;
+} PREPROCESSING_GENERAL;
 
 #endif // PREPROCESSING_CONFIG_H

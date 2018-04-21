@@ -10,7 +10,7 @@ class Binarization : public QObject
 public:
     explicit Binarization(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgEnhanced, const bool &useMask, const cv::Mat &imgMask, const bool &useQMap, const cv::Mat &imgQMap);
+    void setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams, const PREPROCESSING_FEATURES &features);
     void binarizeCPU();
     void binarizeGPU();
     void binarizeGaussianBlur();
@@ -20,14 +20,17 @@ public:
     cv::Mat getImgBinarized() const;
 
 private:
-    cv::Mat imgEnhanced_;
-    cv::Mat imgMask_;
-    cv::Mat imgQMap_;
+
+    // INPUT
+    cv::Mat imgEnhanced;
+    BINARIZATION_PARAMS binarization;
+    PREPROCESSING_FEATURES features;
+
+    // OUTPUT
     cv::Mat imgBinarized;
 
-    bool useMask_;
-    bool useQMap_;
 
+    // PRIVATE FUNCTIONS
     void deleteBackground();
 };
 

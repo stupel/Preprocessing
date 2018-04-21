@@ -26,12 +26,11 @@ static inline bool need_set_guo_hall(uchar*  skeldata, int iter, int col, int ro
     return (C == 1 && (N >= 2 && N <= 3) && m == 0);
 }
 
-cv::Mat Thinning::invertColor(const cv::Mat img)
+cv::Mat Thinning::invertColor(const cv::Mat &img)
 {
     cv::Mat imgInverted;
 
-    cv::Mat sub_mat = cv::Mat::ones(img.size(), img.type()) * 255;
-    cv::subtract(sub_mat, img, imgInverted);
+    cv::bitwise_not(img, imgInverted);
 
     return imgInverted;
 }
