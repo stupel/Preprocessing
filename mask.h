@@ -14,7 +14,7 @@ public:
     cv::Mat getImgMask() const;
 
     void loadMaskModel(const CAFFE_FILES &maskFiles);
-    void setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams, const bool &cpuOnly);
+    void setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams);
     void generate();
 
 private:
@@ -22,7 +22,6 @@ private:
 
     cv::Mat imgOriginal;
     MASK_PARAMS mask;
-    bool cpuOnly;
 
     cv::Mat imgMask;
 

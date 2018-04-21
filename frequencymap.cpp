@@ -18,16 +18,15 @@ void FrequencyMap::loadFrequencyMapModel(const CAFFE_FILES &freqFiles)
     this->isFrequencyModelLoaded = true;
 }
 
-void FrequencyMap::setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmapParams, const bool &cpuOnly)
+void FrequencyMap::setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmapParams)
 {
     this->imgOriginal = imgOriginal;
     this->fmap = fmapParams;
-    this->cpuOnly = cpuOnly;
 }
 
 void FrequencyMap::generate()
 {
-    if (this->cpuOnly) Caffe::set_mode(Caffe::CPU);
+    if (this->fmap.cpuOnly) Caffe::set_mode(Caffe::CPU);
     else Caffe::set_mode(Caffe::GPU);
 
     this->frequencyMap = cv::Mat(this->imgOriginal.rows + this->fmap.blockSize, this->imgOriginal.cols + this->fmap.blockSize, CV_8UC1);

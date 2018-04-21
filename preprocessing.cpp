@@ -13,6 +13,7 @@ Preprocessing::Preprocessing()
     this->features.useContrastEnhancement = true;
     this->features.useQualityMap = true;
     this->features.useHoleRemover = true;
+    this->features.useAdvancedOrientationMap = true;
     this->features.generateInvertedSceleton = true;
     this->features.useMask = false;
     this->features.useFrequencyMap = false;
@@ -40,13 +41,15 @@ Preprocessing::Preprocessing()
     this->gaborParams.sigma = 3;
     this->gaborParams.gamma = 1;
     this->gaborParams.psi = 0;
-    this->gaborParams.threadNums = QThread::idealThreadCount();
-    this->gaborParams.useFrequencyMap = this->features.useFrequencyMap;
-    this->gaborParams.frequencyMap = this->results.frequencyMap;
+    this->gaborParams.oMap = &this->results.orientationMap;
+    this->gaborParams.oMapAF = &this->orientationMapAF;
+    this->gaborParams.threadNum = &this->general.threadNum;
+    this->gaborParams.useFrequencyMap = &this->features.useFrequencyMap;
+    this->gaborParams.fMap = &this->results.frequencyMap;
 
     // BINARIZATION PARAMS
-    this->binarizationParams.imgMask = this->results.imgMask;
-    this->binarizationParams.imgQualityMap = this->results.qualityMap;
+    this->binarizationParams.imgMask = &this->results.imgMask;
+    this->binarizationParams.imgQualityMap = &this->results.imgQualityMap;
     this->binarizationParams.holeSize = 20;
 
     // QUALITY MAP
@@ -60,6 +63,7 @@ Preprocessing::Preprocessing()
     this->maskParams.blockSize = 9;
     this->maskParams.exBlockSize = 30;
     this->maskParams.useSmooth = false;
+    this->maskParams.cpuOnly = &this->general.cpuOnly;
 
     // FREQUENCY MAP PARAMS
     this->fmapParams.caffeFiles.model = "./core/config/Caffe/frequency_deploy.prototxt";
@@ -68,6 +72,7 @@ Preprocessing::Preprocessing()
     this->fmapParams.caffeFiles.label = "./core/config/Caffe/frequency_labels.txt";
     this->fmapParams.blockSize = 9;
     this->fmapParams.exBlockSize = 30;
+    this->fmapParams.cpuOnly = &this->general.cpuOnly;
 
     // RESULTS
     this->results.imgOriginal = this->imgOriginal;
@@ -152,10 +157,11 @@ void Preprocessing::setPreprocessingParams(int blockSize, double gaborLambda, do
     this->binarizationParams.holeSize = holeSize;
 }
 
-void Preprocessing::setFeatures(bool useAdvancedMode, bool useContrastEnhancement, bool useHoleRemover, bool generateInvertedSkeleton, bool useQualityMap, bool useMask, bool useFrequencyMap)
+void Preprocessing::setFeatures(bool useAdvancedMode, bool useContrastEnhancement, bool useAdvancedOrientationMap, bool useHoleRemover, bool generateInvertedSkeleton, bool useQualityMap, bool useMask, bool useFrequencyMap)
 {
     this->features.advancedMode = useAdvancedMode;
     this->features.useContrastEnhancement = useContrastEnhancement;
+    this->features.useAdvancedOrientationMap = useAdvancedOrientationMap;
     this->features.useQualityMap = useQualityMap;
     this->features.useHoleRemover = useHoleRemover;
     this->features.generateInvertedSceleton = generateInvertedSkeleton;
@@ -182,7 +188,7 @@ void Preprocessing::start()
         if (this->features.useMask) {
             if (!this->isMaskModelLoaded) mask.loadMaskModel(this->maskParams.caffeFiles);
 
-            this->mask.setParams(this->imgOriginal, this->maskParams, this->general.cpuOnly);
+            this->mask.setParams(this->imgOriginal, this->maskParams);
             this->timer.start();
             this->mask.generate();
             this->durations.mask = this->timer.elapsed();
@@ -205,7 +211,7 @@ void Preprocessing::start()
         if (this->features.useFrequencyMap) {
             if (!this->isFrequencyModelLoaded) this->fMap.loadFrequencyMapModel(this->fmapParams.caffeFiles);
 
-            this->fMap.setParams(this->imgOriginal, this->fmapParams, this->general.cpuOnly);
+            this->fMap.setParams(this->imgOriginal, this->fmapParams);
             this->timer.start();
             this->fMap.generate();
             this->durations.frequencyMap = this->timer.elapsed();
@@ -228,15 +234,23 @@ void Preprocessing::start()
         else this->oMap.setParams(this->imgOriginal, this->omapParams);
 
         if (this->general.cpuOnly) {
-            this->oMap.computeAdvancedMapCPU();
+            this->oMap.computeAdvancedMapCPU(); // Gabor Filter in CPU mode works only with advanced orientation map
+            this->results.orientationMap = this->oMap.getOMap_advanced();
         }
         else {
-            this->oMap.computeAdvancedMapGPU();
-            this->advancedOMapAF = this->oMap.getOMapAF_advanced();
+            if (this->features.useAdvancedOrientationMap) {
+                this->oMap.computeAdvancedMapGPU();
+                this->orientationMapAF = this->oMap.getOMapAF_advanced();
+                this->results.orientationMap = this->oMap.getOMap_advanced();
+            }
+            else {
+                this->oMap.computeBasicMapGPU();
+                this->orientationMapAF = this->oMap.getOMapAF_basic();
+                this->results.orientationMap = this->oMap.getOMap_basic();
+            }
         }
 
         this->durations.orientationMap = this->oMap.getDuration();
-        this->results.orientationMap = this->oMap.getOMap_advanced();
 
         if (this->features.advancedMode) {
             this->oMap.drawBasicMap(this->imgOriginal);
@@ -245,10 +259,11 @@ void Preprocessing::start()
 
         if (!this->general.cpuOnly) {
             // GABOR FILTER GPU
-            if (this->features.useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->advancedOMapAF, this->gaborParams);
-            else this->gaborGPU.setParams(this->imgOriginal, this->advancedOMapAF, this->gaborParams);
+            if (this->features.useContrastEnhancement) this->gaborGPU.setParams(this->results.imgContrastEnhanced, this->gaborParams);
+            else this->gaborGPU.setParams(this->imgOriginal, this->gaborParams);
 
-            this->gaborGPU.enhanceWithAdvancedOMAP();
+            if (this->features.useAdvancedOrientationMap) this->gaborGPU.enhanceWithAdvancedOMap();
+            else this->gaborGPU.enhanceWithBasicOMap();
             this->durations.gaborFilter = this->gaborGPU.getDuration();
 
             this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
@@ -256,8 +271,8 @@ void Preprocessing::start()
         }
         else {
             // GABOR FILTER CPU MULTITHREAD
-            if (this->features.useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->results.orientationMap, this->gaborParams, this->general.threadNum);
-            else this->gaborMultiThread.setParams(this->imgOriginal, this->results.orientationMap, this->gaborParams, this->general.threadNum);
+            if (this->features.useContrastEnhancement) this->gaborMultiThread.setParams(this->results.imgContrastEnhanced, this->gaborParams);
+            else this->gaborMultiThread.setParams(this->imgOriginal, this->gaborParams);
             this->timer.start();
             this->gaborMultiThread.enhance(); // filtrovanie so zvolenym typom smerovej mapy
         }

@@ -66,6 +66,7 @@ typedef struct qmap_params {
 typedef struct fmap_params {
     int blockSize;
     int exBlockSize;
+    bool *cpuOnly;
     CAFFE_FILES caffeFiles;
 } FMAP_PARAMS;
 
@@ -73,6 +74,7 @@ typedef struct mask_params {
     int blockSize;
     int exBlockSize;
     bool useSmooth;
+    bool *cpuOnly;
     CAFFE_FILES caffeFiles;
 } MASK_PARAMS;
 
@@ -89,14 +91,16 @@ typedef struct gabor_params {
     float lambda;
     float gamma;
     float psi;
-    int threadNums;
-    bool useFrequencyMap;
-    cv::Mat frequencyMap;
+    cv::Mat *oMap;
+    af::array *oMapAF;
+    int *threadNum;
+    bool *useFrequencyMap;
+    cv::Mat *fMap;
 } GABOR_PARAMS;
 
 typedef struct binarization_params {
-    cv::Mat imgQualityMap;
-    cv::Mat imgMask;
+    cv::Mat *imgQualityMap;
+    cv::Mat *imgMask;
     int holeSize;
 } BINARIZATION_PARAMS;
 
@@ -105,6 +109,7 @@ typedef struct preprocessing_features {
     bool useContrastEnhancement;
     bool useQualityMap;
     bool useHoleRemover;
+    bool useAdvancedOrientationMap;
     bool useMask;
     bool useFrequencyMap;
     bool generateInvertedSceleton;

@@ -11,6 +11,8 @@ public:
     explicit OrientationMap(QObject *parent = nullptr);
 
     void setParams(const cv::Mat &imgInput, OMAP_PARAMS omap);
+    void computeBasicMapCPU();
+    void computeBasicMapGPU();
     void computeAdvancedMapCPU();
     void computeAdvancedMapGPU();
     void drawBasicMap(const cv::Mat &imgOriginal);
@@ -20,13 +22,11 @@ public:
     cv::Mat getOMap_basic() const;
     cv::Mat getImgOMap_basic() const;
     float getDuration() const;
+    af::array getOMapAF_basic() const;
     af::array getOMapAF_advanced() const;
 
+
 private:
-
-    void computeBasicMapCPU();
-    void computeBasicMapGPU();
-
     QTime timer;
 
     cv::Mat imgInput; // obrazok odtlacku

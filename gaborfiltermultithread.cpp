@@ -5,12 +5,10 @@ GaborFilterMultiThread::GaborFilterMultiThread(QObject *parent) : QObject(parent
 
 }
 
-void GaborFilterMultiThread::setParams(const cv::Mat &imgInput, const cv::Mat &orientationMap, const GABOR_PARAMS &gaborParams, const int &threadNum)
+void GaborFilterMultiThread::setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams)
 {
     this->imgInput = imgInput;
-    this->oMap = orientationMap;
     this->gabor = gaborParams;
-    this->threadNum = threadNum;
 }
 
 void GaborFilterMultiThread::enhance()
@@ -21,17 +19,15 @@ void GaborFilterMultiThread::enhance()
     QVector<GaborThread*> gaborThreads; // vlakna na paralelne filtrovanie
     threads.clear(); // vymazu sa predchadzajuce vlakna
 
-    for(int i = 0; i < this->threadNum; i++){
+    for(int i = 0; i < *this->gabor.threadNum; i++){
 
         int threadBlock_Width = this->imgInput.cols - this->gabor.blockSize;
-        int threadBlock_Height = (this->imgInput.rows - this->gabor.blockSize) / this->threadNum;
+        int threadBlock_Height = (this->imgInput.rows - this->gabor.blockSize) / *this->gabor.threadNum;
         int topLeftCorner_X = qFloor(this->gabor.blockSize / 2);
         int topLeftCorner_Y = qFloor(this->gabor.blockSize / 2) + i * threadBlock_Height ; // pozor!!!
 
         threads.push_back(new QThread());
-        gaborThreads.push_back(new GaborThread(this->imgInput, this->oMap, this->gabor,
-                                               cv::Rect(topLeftCorner_X, topLeftCorner_Y, threadBlock_Width, threadBlock_Height),
-                                               this->imgEnhanced));
+        gaborThreads.push_back(new GaborThread(this->imgInput, this->gabor, cv::Rect(topLeftCorner_X, topLeftCorner_Y, threadBlock_Width, threadBlock_Height), this->imgEnhanced));
         gaborThreads.last()->moveToThread(threads.last()); // pridanie do samostatneho vlakna
 
         connect(threads.last(), SIGNAL(finished()), gaborThreads.last(), SLOT(deleteLater()));
@@ -50,7 +46,7 @@ void GaborFilterMultiThread::enhance()
 void GaborFilterMultiThread::oneGaborThreadFinished()
 {
     // ak vsetky vlakna ukoncili svoju cinnost
-    if(++this->threadsFinished == this->threadNum){
+    if(++this->threadsFinished == *this->gabor.threadNum){
         // obrazok sa znormalizuje
         cv::normalize(this->imgEnhanced, this->imgEnhanced, 0.0, 255.0, cv::NORM_MINMAX);
         // konverzia do grayscale formatu

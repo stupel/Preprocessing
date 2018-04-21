@@ -62,7 +62,7 @@ public:
 
     void loadImg(cv::Mat imgOriginal);
     void setPreprocessingParams(int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
-    void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useHoleRemover = true, bool generateInvertedSkeleton = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
+    void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useAdvancedOrientationMap = true, bool useHoleRemover = true, bool generateInvertedSkeleton = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
     void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
     void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
     void setCPUOnly(bool enabled, int threadNum = 0);
@@ -99,7 +99,7 @@ private:
     PREPROCESSING_GENERAL general;
 
     // OUTPUT
-    af::array advancedOMapAF;
+    af::array orientationMapAF;
     PREPROCESSING_ALL_RESULTS results;
     PREPROCESSING_DURATIONS durations;
 

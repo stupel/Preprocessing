@@ -15,7 +15,7 @@ class GaborFilterMultiThread : public QObject
 public:
     explicit GaborFilterMultiThread(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgInput, const cv::Mat &orientationMap, const GABOR_PARAMS &gaborParams, const int &threadNum);
+    void setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams);
     void enhance();
 
     //getNset
@@ -27,8 +27,6 @@ private:
 
     // INPUT
     cv::Mat imgInput;
-    cv::Mat oMap;
-    int threadNum;
 
     GABOR_PARAMS gabor;
 

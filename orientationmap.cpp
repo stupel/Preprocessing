@@ -236,6 +236,11 @@ af::array OrientationMap::getOMapAF_advanced() const
     return oMapAF_advanced;
 }
 
+af::array OrientationMap::getOMapAF_basic() const
+{
+    return oMapAF_basic;
+}
+
 float OrientationMap::getDuration() const
 {
     return duration;

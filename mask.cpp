@@ -18,17 +18,16 @@ void Mask::loadMaskModel(const CAFFE_FILES &maskFiles)
     this->isMaskModelLoaded = true;
 }
 
-void Mask::setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams, const bool &cpuOnly)
+void Mask::setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams)
 {
     this->imgOriginal = imgOriginal;
     this->mask = maskParams;
-    this->cpuOnly = cpuOnly;
 }
 
 void Mask::generate()
 {
 
-    if (this->cpuOnly) Caffe::set_mode(Caffe::CPU);
+    if (this->mask.cpuOnly) Caffe::set_mode(Caffe::CPU);
     else Caffe::set_mode(Caffe::GPU);
 
     this->imgMask = cv::Mat::zeros(this->imgOriginal.rows + this->mask.blockSize, this->imgOriginal.cols + this->mask.blockSize, CV_8UC1);
@@ -54,7 +53,7 @@ void Mask::generate()
     for (int x = 0; x < this->imgOriginal.cols; x += this->mask.blockSize) {
         for (int y = 0; y < this->imgOriginal.rows; y += this->mask.blockSize) {
             prediction = predictions[cnt];
-            if (prediction[0].first[0] == 'f') {
+            if (prediction[0].first[0] == 'f' || prediction[0].first[0] == 'F') {
                 whiteBlock.copyTo(this->imgMask(cv::Rect(x, y, this->mask.blockSize, this->mask.blockSize)));
             }
             cnt++;
