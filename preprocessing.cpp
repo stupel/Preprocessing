@@ -191,7 +191,7 @@ void Preprocessing::start()
 
         // QUALITY MAP
         if (this->features.useQualityMap) {
-            this->qMap.setParams(Helper::Mat2QImage(this->imgOriginal, QImage::Format_Grayscale8), this->qmapParams);
+            this->qMap.setParams(this->imgOriginal, this->qmapParams);
 
             this->timer.start();
             this->qMap.computeQualityMap();

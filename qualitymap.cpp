@@ -5,13 +5,13 @@ QualityMap::QualityMap(QObject *parent) : QObject(parent)
 
 }
 
-void QualityMap::setParams(const QImage &img, QMAP_PARAMS qmapParams)
+void QualityMap::setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams)
 {
-    this->inputImg = img;
-    this->idata = inputImg.bits();
-    this->iw = inputImg.width();
-    this->ih = inputImg.height();
-    this->id = inputImg.depth();
+    this->imgOriginal = imgOriginal;
+    this->idata = imgOriginal.data;
+    this->iw = imgOriginal.cols;
+    this->ih = imgOriginal.rows;
+    this->id = 8 * imgOriginal.elemSize();
     this->ippi = qmapParams.ppi;
     if(this->id != 8){
         qDebug() << "Error: Wrong image depth. Image is not grayscale.";
@@ -105,7 +105,7 @@ cv::Mat QualityMap::getImgQualityMap()
         }
     }
 
-    return imgQualityMap.rowRange(0, this->inputImg.height()).colRange(0, this->inputImg.width());
+    return imgQualityMap.rowRange(0, this->ih).colRange(0, this->iw);
 }
 
 cv::Mat QualityMap::getQualityMap()
@@ -128,7 +128,7 @@ cv::Mat QualityMap::getQualityMap()
         }
     }
 
-    return qualityMap.rowRange(0, this->inputImg.height()).colRange(0, this->inputImg.width());
+    return qualityMap.rowRange(0, this->ih).colRange(0, this->iw);
 }
 
 void QualityMap::fill_minutiae(MINUTIAE_VECTOR &minutiae)

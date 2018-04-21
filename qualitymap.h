@@ -269,7 +269,7 @@ public:
     // *********   interface functions   *********//
 
     explicit QualityMap(QObject *parent = nullptr);
-    void setParams(const QImage &img, QMAP_PARAMS qmapParams); // loads input image
+    void setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams); // loads input image
     void computeQualityMap(); // computes quality map
     void computeQualityMapMinutiae(MINUTIAE_VECTOR& minutiae); // computes quality map and assigns quality to minutiae
     int *getQuality_map() const;
@@ -302,7 +302,7 @@ private:
     int map_h; // height of all image maps
 
     MINUTIAE *minutiae; // struct containing minutiae
-    QImage inputImg; // input image
+    cv::Mat imgOriginal; // input image
 
     /* Allocate and initialize VERSION 2 global LFS parameters structure. */
     LFSPARMS lfsparms_V2 = {
