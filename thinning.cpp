@@ -106,8 +106,14 @@ cv::Rect Thinning::copy_bounding_box_plusone(const cv::Mat1b& img, cv::Mat1b& ou
 
 bool Thinning::thinGuoHallFast(const cv::Mat1b& img, bool inverted, bool crop_img_before, int max_iters)
 {
-    if (inverted) return this->thin_fast_custom_voronoi_fn(img, inverted, need_set_guo_hall, crop_img_before, max_iters);
-    else return this->thin_fast_custom_voronoi_fn(this->invertColor(img), inverted, need_set_guo_hall, crop_img_before, max_iters);
+    if (inverted) {
+        this->imgSkeletonInverted = cv::Mat(img.rows, img.cols, CV_8UC1);
+        return this->thin_fast_custom_voronoi_fn(img, inverted, need_set_guo_hall, crop_img_before, max_iters);
+    }
+    else {
+        this->imgSkeleton = cv::Mat(img.rows, img.cols, CV_8UC1);
+        return this->thin_fast_custom_voronoi_fn(this->invertColor(img), inverted, need_set_guo_hall, crop_img_before, max_iters);
+    }
 }
 
 bool Thinning::thin_fast_custom_voronoi_fn(const cv::Mat1b& img, bool inverted, VoronoiFn voronoi_fn, bool crop_img_before, int max_iters)

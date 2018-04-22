@@ -10,7 +10,7 @@ class Binarization : public QObject
 public:
     explicit Binarization(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams, const PREPROCESSING_FEATURES &features);
+    void setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams);
     void binarizeCPU();
     void binarizeGPU();
     void binarizeGaussianBlur();
@@ -24,7 +24,6 @@ private:
     // INPUT
     cv::Mat imgEnhanced;
     BINARIZATION_PARAMS binarization;
-    PREPROCESSING_FEATURES features;
 
     // OUTPUT
     cv::Mat imgBinarized;

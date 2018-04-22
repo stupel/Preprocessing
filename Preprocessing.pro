@@ -50,3 +50,5 @@ unix:!macx: LIBS += -L$$PWD/../../../../../opt/cuda/lib64/ -lcudart
 INCLUDEPATH += $$PWD/../../../../../opt/cuda/include
 DEPENDPATH += $$PWD/../../../../../opt/cuda/include
 
+#ArrayFire
+unix:!macx: LIBS += -L$$PWD/../../../../../usr/lib/ -lafcuda

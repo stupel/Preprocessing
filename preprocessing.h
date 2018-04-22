@@ -32,7 +32,7 @@ typedef struct preprocessing_all_results {
 } PREPROCESSING_ALL_RESULTS;
 
 typedef struct preprocessing_results {
-    cv::Mat imgOriginal;
+    cv::Mat *imgOriginal;
     cv::Mat imgSkeleton;
     cv::Mat imgSkeletonInverted;
     cv::Mat qualityMap;
@@ -60,15 +60,15 @@ public:
     Preprocessing();
     void start();
 
-    void loadImg(cv::Mat imgOriginal);
-    void setPreprocessingParams(int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
-    void setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useAdvancedOrientationMap = true, bool useHoleRemover = true, bool generateInvertedSkeleton = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
-    void setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
-    void setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
-    void setCPUOnly(bool enabled, int threadNum = 0);
+    int loadInput(cv::Mat imgOriginal);
+    int loadInput(QVector<cv::Mat> imgOriginals);
+    int loadInput(QString inputPath);
 
-    PREPROCESSING_ALL_RESULTS getResults() const;
-    PREPROCESSING_DURATIONS getDurations() const;
+    int setPreprocessingParams(int blockSize = 13, double gaborLambda = 9, double gaborSigma = 3, int gaussBlockBasic = 1, double gaussSigmaBasic = 1.0, int gaussBlockAdvanced = 121, double gaussSigmaAdvanced = 10.0, int holeSize = 20);
+    int setFeatures(bool useAdvancedMode, bool useContrastEnhancement = true, bool useAdvancedOrientationMap = true, bool useHoleRemover = true, bool generateInvertedSkeleton = true, bool useQualityMap = true, bool useMask = false, bool useFrequencyMap = false);
+    int setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize);
+    int setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
+    int setCPUOnly(bool enabled, int threadNum = 0);
 
 private:
     ContrastEnhancement contrast;
@@ -83,8 +83,10 @@ private:
 
     QTime timer;
 
+    bool preprocessingIsRunning;
+
     // INPUT
-    cv::Mat imgOriginal;
+    INPUT_PARAMS inputParams;
 
     // PARAMS
     OMAP_PARAMS omapParams;
@@ -101,28 +103,31 @@ private:
     // OUTPUT
     af::array orientationMapAF;
     PREPROCESSING_ALL_RESULTS results;
+    QMap<QString, PREPROCESSING_RESULTS> resultsMap;
+    QMap<QString, PREPROCESSING_ALL_RESULTS> allResultsMap;
+
     PREPROCESSING_DURATIONS durations;
-
-    // CHECKS
-    bool firstRun;
-    bool imgLoaded;
-    bool isFrequencyModelLoaded;
-    bool isMaskModelLoaded;
-
 
     // PRIVATE FUNCTIONS
     void continueAfterGabor();
-    int preprocessingError(int errorcode);
-    void clean();
+    void preprocessingError(int errorcode);
+    void cleanResults();
+    void cleanInput();
+    void cleanDurations();
+    void startProcess(const cv::Mat &imgOriginal);
 
 private slots:
     void allGaborThreadsFinished();
+    void continuePreprocessingWithNext();
 
 signals:
     void preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);
     void preprocessingDoneSignal(PREPROCESSING_RESULTS results);
+    void preprocessingSequenceAdvancedDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);
+    void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
     void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
     void preprocessingErrorSignal(int errorcode);
+    void preprocessingPartDoneSignal();
 };
 
 #endif // PREPROCESSING_H

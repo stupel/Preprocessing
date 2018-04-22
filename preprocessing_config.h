@@ -15,6 +15,7 @@
 #include <QPainter>
 #include <QDir>
 #include <QProcess>
+#include <QFileInfo>
 
 //std
 #include <iostream>
@@ -47,6 +48,18 @@
 #define CAFFE_FILES_DEFINED
 #endif
 
+enum INPUTMODE {image, images, imagePath, imageDirectory};
+
+typedef struct input_params {
+    INPUTMODE mode;
+    cv::Mat imgOriginal;
+    QVector<cv::Mat> imgOriginals;
+    QString path;
+    QVector<QString> imgNames;
+    int cnt;
+    bool inputLoaded;
+} INPUT_PARAMS;
+
 // nastavenia pre funkciu GaussianBlur, ktora sa pouziva na vyhladenie smerovej mapy
 typedef struct gaussian_blur_settings {
     int blockSize;  // velkost bloku pre vyhladenie smerovej mapy (cez bloky)
@@ -66,6 +79,7 @@ typedef struct qmap_params {
 typedef struct fmap_params {
     int blockSize;
     int exBlockSize;
+    bool isModelLoaded;
     bool *cpuOnly;
     CAFFE_FILES caffeFiles;
 } FMAP_PARAMS;
@@ -74,6 +88,7 @@ typedef struct mask_params {
     int blockSize;
     int exBlockSize;
     bool useSmooth;
+    bool isModelLoaded;
     bool *cpuOnly;
     CAFFE_FILES caffeFiles;
 } MASK_PARAMS;
@@ -99,7 +114,9 @@ typedef struct gabor_params {
 } GABOR_PARAMS;
 
 typedef struct binarization_params {
+    bool *useQualityMap;
     cv::Mat *imgQualityMap;
+    bool *useMask;
     cv::Mat *imgMask;
     int holeSize;
 } BINARIZATION_PARAMS;

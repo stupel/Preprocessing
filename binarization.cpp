@@ -5,11 +5,10 @@ Binarization::Binarization(QObject *parent) : QObject(parent)
 
 }
 
-void Binarization::setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams, const PREPROCESSING_FEATURES &features)
+void Binarization::setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams)
 {
     this->imgEnhanced = imgEnhanced;
     this->binarization = binarizationParams;
-    this->features = features;
 }
 
 void Binarization::binarizeGaussianBlur()
@@ -18,7 +17,7 @@ void Binarization::binarizeGaussianBlur()
     cv::GaussianBlur(this->imgEnhanced, this->imgBinarized, cv::Size(3,3), 1);
     cv::threshold(this->imgBinarized, this->imgBinarized, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
 
-    if (this->features.useQualityMap || this->features.useMask) this->deleteBackground();
+    if (*this->binarization.useQualityMap || *this->binarization.useMask) this->deleteBackground();
 }
 
 void Binarization::binarizeAdaptive()
@@ -26,19 +25,19 @@ void Binarization::binarizeAdaptive()
     this->imgBinarized = cv::Mat(this->imgEnhanced.rows, this->imgEnhanced.cols, this->imgEnhanced.type());
     cv::adaptiveThreshold(this->imgEnhanced, this->imgBinarized, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 21, 10);
 
-    if (this->features.useQualityMap || this->features.useMask) this->deleteBackground();
+    if (*this->binarization.useQualityMap || *this->binarization.useMask) this->deleteBackground();
 }
 
 void Binarization::deleteBackground()
 {
-    if (this->features.useQualityMap) {
+    if (*this->binarization.useQualityMap) {
         for (int x = 0; x < this->imgBinarized.cols; x++) {
             for (int y = 0; y < this->imgBinarized.rows; y++) {
                 if (this->binarization.imgQualityMap->at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
             }
         }
     }
-    else if (this->features.useMask) {
+    else if (*this->binarization.useMask) {
         for (int x = 0; x < this->imgBinarized.cols; x++) {
             for (int y = 0; y < this->imgBinarized.rows; y++) {
                 if (this->binarization.imgMask->at<uchar>(y, x) == 0) this->imgBinarized.at<uchar>(y, x) = 255;
@@ -67,7 +66,7 @@ void Binarization::removeHoles(double holeSize)
     }
 
     // vyplnim diery bielou farbou
-    for(int ii=0;ii<contours.size();ii++)
+    for(int ii=0; ii<contours.size(); ii++)
     {
         cv::drawContours(this->imgBinarized, contours, ii, cv::Scalar(255), -1, cv::LINE_8);
     }
