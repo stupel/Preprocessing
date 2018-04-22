@@ -413,14 +413,19 @@ void Preprocessing::startProcess(const cv::Mat &imgOriginal)
         this->results.orientationMap = this->oMap.getOMap_advanced();
     }
     else {
-        this->oMap.computeAdvancedMapGPU();
-        if (this->features.useAdvancedOrientationMap) {
-            this->orientationMapAF = this->oMap.getOMapAF_advanced();
+        try {
+            this->oMap.computeAdvancedMapGPU();
+            if (this->features.useAdvancedOrientationMap) {
+                this->orientationMapAF = this->oMap.getOMapAF_advanced();
+            }
+            else {
+                this->orientationMapAF = this->oMap.getOMapAF_basic();
+            }
+            this->results.orientationMap = this->oMap.getOMap_advanced();
+        } catch (const af::exception& e) {
+            this->preprocessingError(30);
+            qDebug() << "ArrayFire exception: " << e.what();
         }
-        else {
-            this->orientationMapAF = this->oMap.getOMapAF_basic();
-        }
-        this->results.orientationMap = this->oMap.getOMap_advanced();
     }
 
     this->durations.orientationMap += this->oMap.getDuration();
@@ -441,8 +446,7 @@ void Preprocessing::startProcess(const cv::Mat &imgOriginal)
             this->durations.gaborFilter += this->gaborGPU.getDuration();
         } catch (const af::exception& e) {
             this->preprocessingError(30);
-            qDebug() << e.what();
-            throw;
+            qDebug() << "ArrayFire exception: " << e.what();
         }
 
         this->results.imgEnhanced = this->gaborGPU.getImgEnhanced(); // ziskanie prefiltrovaneho odtlacku
