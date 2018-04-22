@@ -529,6 +529,5 @@ void Preprocessing::preprocessingError(int errorcode)
      * 30 - ArrayFire Exception
      */
 
-    this->preprocessingIsRunning = false;
     emit preprocessingErrorSignal(errorcode);
 }

@@ -31,6 +31,7 @@ typedef struct preprocessing_all_results {
     cv::Mat qualityMap;
 } PREPROCESSING_ALL_RESULTS;
 
+#ifndef PREPROCESSING_RESULTS_DEFINED
 typedef struct preprocessing_results {
     cv::Mat imgOriginal;
     cv::Mat imgSkeleton;
@@ -38,6 +39,8 @@ typedef struct preprocessing_results {
     cv::Mat qualityMap;
     cv::Mat orientationMap;
 } PREPROCESSING_RESULTS;
+#define PREPROCESSING_RESULTS_DEFINED
+#endif
 
 //duration in ms
 typedef struct preprocessing_durations {
