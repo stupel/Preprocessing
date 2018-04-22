@@ -115,10 +115,10 @@ private:
     void cleanInput();
     void cleanDurations();
     void startProcess(const cv::Mat &imgOriginal);
+    void continuePreprocessingWithNext();
 
 private slots:
     void allGaborThreadsFinished();
-    void continuePreprocessingWithNext();
 
 signals:
     void preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);
@@ -127,7 +127,6 @@ signals:
     void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
     void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
     void preprocessingErrorSignal(int errorcode);
-    void preprocessingPartDoneSignal();
 };
 
 #endif // PREPROCESSING_H

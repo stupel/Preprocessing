@@ -81,7 +81,6 @@ Preprocessing::Preprocessing()
 
     //CONNECTS
     connect(&this->gaborMultiThread, SIGNAL(gaborThreadsFinished()), this, SLOT(allGaborThreadsFinished()));
-    connect(this, SIGNAL(preprocessingPartDoneSignal()), this, SLOT(continuePreprocessingWithNext()));
 }
 
 int Preprocessing::setFrequencyMapParams(CAFFE_FILES freqFiles, int blockSize, int exBlockSize)
@@ -333,7 +332,7 @@ void Preprocessing::continuePreprocessingWithNext()
     // SAVE RESULTS
     if (this->features.advancedMode) this->allResultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], this->results);
     else {
-        PREPROCESSING_RESULTS basicResults = {&this->inputParams.imgOriginals[this->inputParams.cnt], this->results.imgSkeleton, this->results.imgSkeletonInverted,
+        PREPROCESSING_RESULTS basicResults = {this->inputParams.imgOriginals[this->inputParams.cnt], this->results.imgSkeleton, this->results.imgSkeletonInverted,
                                               this->results.qualityMap, this->results.orientationMap};
         this->resultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], basicResults);
     }
@@ -513,7 +512,7 @@ void Preprocessing::continueAfterGabor()
 
         this->cleanResults();
     }
-    else emit continuePreprocessingWithNext();
+    else this->continuePreprocessingWithNext();
 }
 
 void Preprocessing::preprocessingError(int errorcode)
