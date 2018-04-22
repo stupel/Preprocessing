@@ -238,6 +238,7 @@ int Preprocessing::loadInput(cv::Mat imgOriginal)
 
     this->cleanInput();
     this->inputParams.imgOriginal = imgOriginal.clone();
+    if (this->inputParams.imgOriginal.channels() != 1) cv::cvtColor(this->inputParams.imgOriginal, this->inputParams.imgOriginal, CV_BGR2GRAY);
     this->inputParams.inputLoaded = true;
     this->inputParams.mode = image;
 
@@ -253,7 +254,10 @@ int Preprocessing::loadInput(QVector<cv::Mat> imgOriginals)
 
     this->cleanInput();
     this->inputParams.imgOriginals = imgOriginals;
-    for (int i = 0; i < imgOriginals.size(); i++) this->inputParams.imgNames.push_back(QString::number(i+1));
+    for (int i = 0; i < imgOriginals.size(); i++) {
+        if (this->inputParams.imgOriginals[i].channels() != 1) cv::cvtColor(this->inputParams.imgOriginals[i], this->inputParams.imgOriginals[i], CV_BGR2GRAY);
+        this->inputParams.imgNames.push_back(QString::number(i+1));
+    }
     this->inputParams.inputLoaded = true;
     this->inputParams.mode = images;
 
@@ -504,7 +508,7 @@ void Preprocessing::continueAfterGabor()
             emit preprocessingAdvancedDoneSignal(this->results);
         }
         else {
-            PREPROCESSING_RESULTS basicResults = {&this->inputParams.imgOriginal, this->results.imgSkeleton, this->results.imgSkeletonInverted,
+            PREPROCESSING_RESULTS basicResults = {this->inputParams.imgOriginal, this->results.imgSkeleton, this->results.imgSkeletonInverted,
                                                   this->results.qualityMap, this->results.orientationMap};
             emit preprocessingDoneSignal(basicResults);
         }

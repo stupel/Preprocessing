@@ -32,7 +32,7 @@ typedef struct preprocessing_all_results {
 } PREPROCESSING_ALL_RESULTS;
 
 typedef struct preprocessing_results {
-    cv::Mat *imgOriginal;
+    cv::Mat imgOriginal;
     cv::Mat imgSkeleton;
     cv::Mat imgSkeletonInverted;
     cv::Mat qualityMap;
