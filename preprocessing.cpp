@@ -331,35 +331,6 @@ void Preprocessing::start()
     else this->preprocessingError(10);
 }
 
-void Preprocessing::continuePreprocessingWithNext()
-{
-    // SAVE RESULTS
-    if (this->features.advancedMode) this->allResultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], this->results);
-    else {
-        PREPROCESSING_RESULTS basicResults = {this->inputParams.imgOriginals[this->inputParams.cnt], this->results.imgSkeleton, this->results.imgSkeletonInverted,
-                                              this->results.qualityMap, this->results.orientationMap};
-        this->resultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], basicResults);
-    }
-
-    // START NEXT PROCESS
-    if (this->inputParams.cnt < this->inputParams.imgOriginals.size()-1) {
-        this->inputParams.cnt++;
-        this->results.imgOriginal = this->inputParams.imgOriginals[this->inputParams.cnt];
-        this->startProcess(this->inputParams.imgOriginals[this->inputParams.cnt]);
-    }
-    // ALL DONE SIGNAL
-    else {
-        this->preprocessingIsRunning = false;
-
-        if (this->features.advancedMode) emit preprocessingSequenceAdvancedDoneSignal(this->allResultsMap);
-        else emit preprocessingSequenceDoneSignal(this->resultsMap);
-
-        emit preprocessingDurationSignal(this->durations);
-
-        this->cleanResults();
-    }
-}
-
 void Preprocessing::startProcess(const cv::Mat &imgOriginal)
 {
     // MASK WITH NEURAL NETWORK
@@ -516,7 +487,38 @@ void Preprocessing::continueAfterGabor()
 
         this->cleanResults();
     }
-    else this->continuePreprocessingWithNext();
+    // IF WE HAVE TO PROCESS MORE FINGERPRINTS
+    else {
+
+        // SAVE RESULTS
+        if (this->features.advancedMode) this->allResultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], this->results);
+        else {
+            PREPROCESSING_RESULTS basicResults = {this->inputParams.imgOriginals[this->inputParams.cnt], this->results.imgSkeleton, this->results.imgSkeletonInverted,
+                                                  this->results.qualityMap, this->results.orientationMap};
+            this->resultsMap.insert(this->inputParams.imgNames[this->inputParams.cnt], basicResults);
+        }
+
+        // SEND PROGRESS VALUE
+        emit this->preprocessingProgressSignal((int)(this->inputParams.cnt*1.0/(this->inputParams.imgOriginals.size()-1)*100));
+
+        // IF EVERYTHING DONE
+        if (this->inputParams.cnt == this->inputParams.imgOriginals.size()-1) {
+            this->preprocessingIsRunning = false;
+
+            if (this->features.advancedMode) emit preprocessingSequenceAdvancedDoneSignal(this->allResultsMap);
+            else emit preprocessingSequenceDoneSignal(this->resultsMap);
+
+            emit preprocessingDurationSignal(this->durations);
+
+            this->cleanResults();
+        }
+        // IF NOT START PREPROCESSING FOR NEXT IMAGE
+        else {
+            this->inputParams.cnt++;
+            this->results.imgOriginal = this->inputParams.imgOriginals[this->inputParams.cnt];
+            this->startProcess(this->inputParams.imgOriginals[this->inputParams.cnt]);
+        }
+    }
 }
 
 void Preprocessing::preprocessingError(int errorcode)
