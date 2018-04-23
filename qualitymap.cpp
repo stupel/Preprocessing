@@ -19,29 +19,6 @@ void QualityMap::setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams)
 }
 
 
-void QualityMap::computeQualityMapMinutiae(MINUTIAE_VECTOR& minutiae)
-{
-    this->computeImageMaps(); // computes image maps
-    this->gen_quality_map(); // computes overall image quality map
-
-    int ret=0;
-    if((ret = alloc_minutiae(&(this->minutiae), MAX_MINUTIAE))){
-        qDebug() << "ERROR: alloc_minutiae()";
-     }
-
-    // TODO
-    // fill minutiae struct
-    this->fill_minutiae(minutiae);
-
-    combined_minutia_quality(this->minutiae, this->quality_map, this->map_w, this->map_h,
-                             this->lfsparms_V2.blocksize,
-                             this->idata, this->iw, this->ih, this->id, this->pixelsPerMM);
-    /*int cntr=0;
-    for(std::tuple<QPoint,int,int,int>& minutia: minutiae){
-        std::get<3>(minutia) = this->minutiae->list[cntr++]->reliability*100;
-    }*/
-}
-
 void QualityMap::computeQualityMap()
 {
     this->computeImageMaps(); // computes image maps
@@ -61,31 +38,6 @@ int QualityMap::getMap_w() const
 int QualityMap::getMap_h() const
 {
     return map_h;
-}
-
-
-void QualityMap::printMatrix(int *img, int width, int height)
-{
-    QString qmapString;
-    for(int i=0; i<height;i++){
-        for(int j=0; j<width;j++){
-            qmapString.append(QString::number(img[i*width+j])+" ");
-        }
-        qDebug() << qmapString;
-        qmapString.clear();
-    }
-}
-
-void QualityMap::printImage(unsigned char *img, int width, int height)
-{
-    QString qmapString;
-    for(int i=0; i<height;i++){
-        for(int j=0; j<width;j++){
-            qmapString.append(QString::number(img[i*width+j])+" ");
-        }
-        qDebug() << qmapString;
-        qmapString.clear();
-    }
 }
 
 cv::Mat QualityMap::getImgQualityMap()
@@ -127,6 +79,8 @@ cv::Mat QualityMap::getQualityMap()
             cnt++;
         }
     }
+
+    qualityMap.convertTo(qualityMap, CV_8UC1, 100 / (100 - 1), - 100.0 * 1 / (100 - 1));
 
     return qualityMap.rowRange(0, this->ih).colRange(0, this->iw);
 }
