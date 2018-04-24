@@ -476,7 +476,7 @@ void Preprocessing::continueAfterGabor()
         this->preprocessingIsRunning = false;
 
         if (this->features.advancedMode) {
-            emit preprocessingAdvancedDoneSignal(this->results);
+            emit preprocessingDoneSignal(this->results);
         }
         else {
             PREPROCESSING_RESULTS basicResults = {this->inputParams.imgOriginal, this->results.imgSkeleton, this->results.imgSkeletonInverted,
@@ -505,7 +505,7 @@ void Preprocessing::continueAfterGabor()
         if (this->inputParams.cnt == this->inputParams.imgOriginals.size()-1) {
             this->preprocessingIsRunning = false;
 
-            if (this->features.advancedMode) emit preprocessingSequenceAdvancedDoneSignal(this->allResultsMap);
+            if (this->features.advancedMode) emit preprocessingSequenceDoneSignal(this->allResultsMap);
             else emit preprocessingSequenceDoneSignal(this->resultsMap);
 
             emit preprocessingDurationSignal(this->durations);

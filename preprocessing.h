@@ -123,14 +123,15 @@ private slots:
     void allGaborThreadsFinished();
 
 signals:
-    void preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);
+    void preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS results);
     void preprocessingDoneSignal(PREPROCESSING_RESULTS results);
-    void preprocessingSequenceAdvancedDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);
-    void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
-    void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
-    void preprocessingErrorSignal(int errorcode);
-    void preprocessingProgressSignal(int progress);
 
+    void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);
+    void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
+
+    void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
+    void preprocessingProgressSignal(int progress);
+    void preprocessingErrorSignal(int errorcode);
 };
 
 #endif // PREPROCESSING_H
