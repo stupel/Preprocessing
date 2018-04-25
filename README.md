@@ -60,11 +60,11 @@ Usage:
 
 **SIGNALS:**
 ```cpp
-preprocessingAdvancedDoneSignal(PREPROCESSING_ALL_RESULTS results);  
+preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS results);  
   
 preprocessingDoneSignal(PREPROCESSING_RESULTS results);  
   
-preprocessingSequenceAdvancedDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);  
+preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);  
   
 preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
   
@@ -74,11 +74,11 @@ preprocessingErrorSignal(int errorcode);
 ```  
 Important notice:  
 - If you load an image or an image path
-  - You get ```preprocessingAdvancedDoneSignal``` if the *advancedMode* is enabled  
-  - You get ```preprocessingDoneSignal``` if the *advancedMode* is disabled  
+  - You get ```preprocessingDoneSignal``` with PREPROCESSING_ALL_RESULTS if the *advancedMode* is enabled  
+  - You get ```preprocessingDoneSignal``` with PREPROCESSING_RESULTS if the *advancedMode* is disabled  
 - If you load a vector with images or an input directory  
-  - You get ```preprocessingSequenceAdvancedDoneSignal``` if the *advancedMode* is enabled  
-  - You get ```preprocessingSequenceDoneSignal``` if *advancedMode* is disabled  
+  - You get ```preprocessingSequenceDoneSignal``` with PREPROCESSING_ALL_RESULTS if the *advancedMode* is enabled  
+  - You get ```preprocessingSequenceDoneSignal``` with PREPROCESSING_RESULTS if *advancedMode* is disabled  
 - You get ```preprocessingDurationSignal``` with duration values in ms for each phase during preprocessing if it's finished successfully
 - You get ```preprocessingErrorSignal``` with the error code if an error occured during preprocessing
   
