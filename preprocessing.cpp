@@ -335,7 +335,10 @@ void Preprocessing::startProcess(const cv::Mat &imgOriginal)
 {
     // MASK WITH NEURAL NETWORK
     if (this->features.useMask) {
-        if (!this->maskParams.isModelLoaded) mask.loadMaskModel(this->maskParams.caffeFiles);
+        if (!this->maskParams.isModelLoaded) {
+            mask.loadMaskModel(this->maskParams.caffeFiles);
+            this->maskParams.isModelLoaded = true;
+        }
 
         this->mask.setParams(imgOriginal, this->maskParams);
         this->timer.start();
@@ -358,7 +361,10 @@ void Preprocessing::startProcess(const cv::Mat &imgOriginal)
 
     // FREQUENCY MAP WITH NEURAL NETWORK
     if (this->features.useFrequencyMap) {
-        if (!this->fmapParams.isModelLoaded) this->fMap.loadFrequencyMapModel(this->fmapParams.caffeFiles);
+        if (!this->fmapParams.isModelLoaded) {
+            this->fMap.loadFrequencyMapModel(this->fmapParams.caffeFiles);
+            this->fmapParams.isModelLoaded = true;
+        }
 
         this->fMap.setParams(imgOriginal, this->fmapParams);
         this->timer.start();
@@ -378,9 +384,9 @@ void Preprocessing::startProcess(const cv::Mat &imgOriginal)
         this->results.imgContrastEnhanced = this->contrast.getImgContrastEnhanced();
 
         // ORIENTATION MAP
-        this->oMap.setParams(this->results.imgContrastEnhanced, this->omapParams);
+        //this->oMap.setParams(this->results.imgContrastEnhanced, this->omapParams);
     }
-    else this->oMap.setParams(imgOriginal, this->omapParams);
+    /*else */this->oMap.setParams(imgOriginal, this->omapParams);
 
     if (this->general.cpuOnly) {
         this->oMap.computeAdvancedMapCPU(); // Gabor Filter in CPU mode works only with advanced orientation map
