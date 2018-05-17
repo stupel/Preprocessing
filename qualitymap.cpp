@@ -80,7 +80,7 @@ cv::Mat QualityMap::getQualityMap()
         }
     }
 
-    qualityMap.convertTo(qualityMap, CV_8UC1, 100 / (100 - 1), - 100.0 * 1 / (100 - 1));
+    //cv::GaussianBlur(qualityMap, qualityMap, cv::Size(121, 121), 10.0, 10.0);
 
     return qualityMap.rowRange(0, this->ih).colRange(0, this->iw);
 }

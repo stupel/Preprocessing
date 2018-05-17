@@ -36,14 +36,18 @@ void FrequencyMap::generate()
     cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->fmap.exBlockSize, this->fmap.exBlockSize, this->fmap.exBlockSize, this->fmap.exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
 
     std::vector<cv::Mat> blocks;
+    int odd = this->fmap.exBlockSize % 2;
     for (int x = this->fmap.exBlockSize; x < this->imgOriginal.cols + this->fmap.exBlockSize; x += this->fmap.blockSize) {
         for (int y = this->fmap.exBlockSize; y < this->imgOriginal.rows + fmap.exBlockSize; y += this->fmap.blockSize) {
-            blocks.push_back(borderedOriginal.colRange(x, x + this->fmap.blockSize).rowRange(y, y + this->fmap.blockSize));
+            blocks.push_back(borderedOriginal.colRange(x - this->fmap.exBlockSize/2, x + this->fmap.exBlockSize/2 + odd).rowRange(y - this->fmap.exBlockSize/2, y + this->fmap.exBlockSize/2 + odd));
         }
     }
 
     std::vector<std::vector<Prediction>> predictions;
-    predictions = this->frequencyClassifier->classifyBatch(blocks, 4);
+    predictions = this->frequencyClassifier->classifyBatch(blocks, 8);
+    /*for (int i = 0; i < blocks.size(); i++) {
+        predictions.push_back(this->frequencyClassifier->classify(blocks.at(i)));
+    }*/
 
     std::vector<Prediction> prediction;
     int cnt = 0;
@@ -60,7 +64,7 @@ void FrequencyMap::generate()
 
     this->frequencyMap.convertTo(this->frequencyMap, CV_32FC1);
 
-    cv::GaussianBlur(this->frequencyMap, this->frequencyMap, cv::Size(121, 121), 10.0, 10.0);
+    //cv::GaussianBlur(this->frequencyMap, this->frequencyMap, cv::Size(121, 121), 10.0, 10.0);
 }
 
 cv::Mat FrequencyMap::getFrequencyMap() const

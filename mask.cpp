@@ -37,16 +37,24 @@ void Mask::generate()
 
     cv::Mat borderedOriginal;
     cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
-
     std::vector<cv::Mat> blocks;
+    int odd = this->mask.exBlockSize % 2;
     for (int x = this->mask.exBlockSize; x < this->imgOriginal.cols + this->mask.exBlockSize; x += this->mask.blockSize) {
         for (int y = this->mask.exBlockSize; y < this->imgOriginal.rows + this->mask.exBlockSize; y += this->mask.blockSize) {
-            blocks.push_back(borderedOriginal.colRange(x, x + this->mask.blockSize).rowRange(y, y + this->mask.blockSize));
+            blocks.push_back(borderedOriginal.colRange(x - this->mask.exBlockSize/2, x + this->mask.exBlockSize/2 + odd).rowRange(y - this->mask.exBlockSize/2, y + this->mask.exBlockSize/2 + odd));
+
         }
     }
 
     std::vector<std::vector<Prediction>> predictions;
+
+    //Use Batch
     predictions = this->maskClassifier->classifyBatch(blocks, 2);
+
+    //Without Batch
+    /*for (int i = 0; i < blocks.size(); i++) {
+        predictions.push_back(this->maskClassifier->classify(blocks[i]));
+    }*/
 
     std::vector<Prediction> prediction;
     int cnt = 0;

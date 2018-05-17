@@ -63,8 +63,8 @@ Preprocessing::Preprocessing()
     this->maskParams.caffeFiles.trained = "./core/config/Caffe/mask.caffemodel";
     this->maskParams.caffeFiles.imageMean = "./core/config/Caffe/mask_imagemean.binaryproto";
     this->maskParams.caffeFiles.label = "./core/config/Caffe/mask_labels.txt";
-    this->maskParams.blockSize = 9;
-    this->maskParams.exBlockSize = 30;
+    this->maskParams.blockSize = 8;
+    this->maskParams.exBlockSize = 19;
     this->maskParams.useSmooth = false;
     this->maskParams.isModelLoaded = false;
     this->maskParams.cpuOnly = &this->general.cpuOnly;
@@ -74,7 +74,7 @@ Preprocessing::Preprocessing()
     this->fmapParams.caffeFiles.trained = "./core/config/Caffe/frequency.caffemodel";
     this->fmapParams.caffeFiles.imageMean = "./core/config/Caffe/frequency_imagemean.binaryproto";
     this->fmapParams.caffeFiles.label = "./core/config/Caffe/frequency_labels.txt";
-    this->fmapParams.blockSize = 9;
+    this->fmapParams.blockSize = 8;
     this->fmapParams.exBlockSize = 30;
     this->fmapParams.isModelLoaded = false;
     this->fmapParams.cpuOnly = &this->general.cpuOnly;

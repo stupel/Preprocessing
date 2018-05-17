@@ -212,7 +212,7 @@ void OrientationMap::drawBasicMap(const cv::Mat &imgOriginal)
             col3 = col1 + cos(direction) * this->omap.blockSize / 2;
             cv::Point endPoint(col2, row2);
             cv::Point endPoint2(col3, row3);
-            cv::line(this->imgOMap_basic, endPoint, endPoint2, cv::Scalar(255,0,0), 1, 4, 0);
+            cv::line(this->imgOMap_basic, endPoint, endPoint2, cv::Scalar(255,255,0), 1, 4, 0);
         }
     }
 }
