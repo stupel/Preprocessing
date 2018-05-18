@@ -54,7 +54,7 @@ void GaborFilterMultiThread::oneGaborThreadFinished()
         // ukoncenie vlakien
         foreach (QThread* t, this->threads) {
             t->quit();
-            t->wait();
+            //t->wait();
         }
         emit gaborThreadsFinished();
     }
