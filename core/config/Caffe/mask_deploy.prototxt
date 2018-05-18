@@ -1,6 +1,6 @@
 name: "FpNet"
 input: "data"
-input_dim: 32
+input_dim: 250
 input_dim: 3
 input_dim: 19
 input_dim: 19

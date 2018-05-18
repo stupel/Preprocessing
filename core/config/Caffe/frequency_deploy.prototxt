@@ -1,6 +1,6 @@
 name: "FrequencyNet"
 input: "data"
-input_dim: 32
+input_dim: 250
 input_dim: 3
 input_dim: 30
 input_dim: 30
