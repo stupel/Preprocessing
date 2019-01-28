@@ -52,3 +52,6 @@ DEPENDPATH += $$PWD/../../../../../opt/cuda/include
 
 #ArrayFire
 unix:!macx: LIBS += -L$$PWD/../../../../../usr/lib/ -lafcuda
+
+#OpenCV
+INCLUDEPATH += /usr/include/opencv4

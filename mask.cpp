@@ -85,7 +85,7 @@ void Mask::smooth(QImage &smoothedMask, int maskBlockSize)
     std::vector<std::vector<cv::Point>> contours;
 
     polygon = this->imgMask.clone();
-    cv::findContours(polygon, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+    cv::findContours(polygon, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
 
     // deleting black holes
     for(int main_i=0;main_i<contours.size();main_i++){
@@ -95,7 +95,7 @@ void Mask::smooth(QImage &smoothedMask, int maskBlockSize)
     // deleting white remnants
     cv::morphologyEx(polygon,polygon, cv::MORPH_OPEN,cv::getStructuringElement(cv::MORPH_RECT,cv::Size(19,19)),cv::Point(-1,-1),2);
 
-    cv::findContours(polygon, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+    cv::findContours(polygon, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
 
     // drawing the fingerprint mask polygon
     QVector<QPoint> singlePolygon;

@@ -191,7 +191,7 @@ void OrientationMap::drawBasicMap(const cv::Mat &imgOriginal)
 {
     // farebny obrazok smerovej mapy po vyhladeni
     this->imgOMap_basic = cv::Mat(imgOriginal.rows, imgOriginal.cols, CV_8UC3);
-    cv::cvtColor(imgOriginal, this->imgOMap_basic, CV_GRAY2RGB);
+    cv::cvtColor(imgOriginal, this->imgOMap_basic, cv::COLOR_GRAY2RGB);
 
     int height = floor(this->imgInput.rows / this->omap.blockSize);
     int width = floor(this->imgInput.cols / this->omap.blockSize);

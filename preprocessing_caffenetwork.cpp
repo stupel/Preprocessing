@@ -217,13 +217,13 @@ void PreprocessingCaffeNetwork::preprocessBatch(const vector<cv::Mat> imgs, std:
         /* Convert the input image to the input image format of the network. */
         cv::Mat sample;
         if (img.channels() == 3 && this->num_channels == 1)
-          cv::cvtColor(img, sample, CV_BGR2GRAY);
+          cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
         else if (img.channels() == 4 && this->num_channels == 1)
-          cv::cvtColor(img, sample, CV_BGRA2GRAY);
+          cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
         else if (img.channels() == 4 && this->num_channels == 3)
-          cv::cvtColor(img, sample, CV_BGRA2BGR);
+          cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
         else if (img.channels() == 1 && this->num_channels == 3)
-          cv::cvtColor(img, sample, CV_GRAY2BGR);
+          cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
         else
           sample = img;
 
