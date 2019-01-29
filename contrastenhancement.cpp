@@ -16,7 +16,7 @@ void ContrastEnhancement::performSuace()
     this->contrast.sigma = (this->contrast.sigma + 1) / 8.0;
     CV_Assert(this->imgOriginal.type() == CV_8UC1);
     if (!(this->contrast.distance > 0 && this->contrast.sigma > 0)) {
-        CV_Error(CV_StsBadArg, "distance and sigma must be greater 0");
+        CV_Error(cv::Error::StsBadArg, "distance and sigma must be greater 0");
     }
     cv::Mat smoothed;
     int val;
