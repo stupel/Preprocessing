@@ -269,9 +269,9 @@ public:
 	// *********   interface functions   *********//
 
 	explicit QualityMap(QObject *parent = nullptr);
-	void setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams); // loads input image
+	void setParams(const cv::Mat &m_imgOriginal, QMAP_PARAMS qmapParams); // loads input image
 	void computeQualityMap(); // computes quality map
-	void computeQualityMapMinutiae(MINUTIAE_VECTOR& minutiae); // computes quality map and assigns quality to minutiae
+	void computeQualityMapMinutiae(MINUTIAE_VECTOR& m_minutiae); // computes quality map and assigns quality to minutiae
 	int *getQuality_map() const;
 	cv::Mat getImgQualityMap();
 	cv::Mat getQualityMap();
@@ -301,8 +301,8 @@ private:
 	int map_w; // width of all image maps
 	int map_h; // height of all image maps
 
-	MINUTIAE *minutiae; // struct containing minutiae
-	cv::Mat imgOriginal; // input image
+	MINUTIAE *m_minutiae; // struct containing minutiae
+	cv::Mat m_imgOriginal; // input image
 
 	/* Allocate and initialize VERSION 2 global LFS parameters structure. */
 	LFSPARMS lfsparms_V2 = {
@@ -457,11 +457,11 @@ private:
 	  {0,1}}};
 
 	// *********   core library functions   *********//
-	void fill_minutiae(MINUTIAE_VECTOR& minutiae);
+	void fill_minutiae(MINUTIAE_VECTOR& m_minutiae);
 	void computeImageMaps();
 	void gen_quality_map();
-	void free_minutiae(MINUTIAE *minutiae);
-	void combined_minutia_quality(MINUTIAE *minutiae,
+	void free_minutiae(MINUTIAE *m_minutiae);
+	void combined_minutia_quality(MINUTIAE *m_minutiae,
 								  int *quality_map, const int mw, const int mh, const int blocksize,
 								  unsigned char *idata, const int iw, const int ih, const int id,
 								  const double ppmm);

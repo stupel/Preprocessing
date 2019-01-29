@@ -7,13 +7,13 @@ QualityMap::QualityMap(QObject *parent) : QObject(parent)
 
 void QualityMap::setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams)
 {
-	this->imgOriginal = imgOriginal;
-	this->idata = imgOriginal.data;
-	this->iw = imgOriginal.cols;
-	this->ih = imgOriginal.rows;
-	this->id = 8 * imgOriginal.elemSize();
-	this->ippi = qmapParams.ppi;
-	if(this->id != 8){
+	m_imgOriginal = imgOriginal;
+	idata = imgOriginal.data;
+	iw = imgOriginal.cols;
+	ih = imgOriginal.rows;
+	id = 8 * imgOriginal.elemSize();
+	ippi = qmapParams.ppi;
+	if(id != 8){
 		qDebug() << "Error: Wrong image depth. Image is not grayscale.";
 	}
 }
@@ -21,8 +21,8 @@ void QualityMap::setParams(const cv::Mat &imgOriginal, QMAP_PARAMS qmapParams)
 
 void QualityMap::computeQualityMap()
 {
-	this->computeImageMaps(); // computes image maps
-	this->gen_quality_map(); // computes overall image quality map
+	computeImageMaps(); // computes image maps
+	gen_quality_map(); // computes overall image quality map
 }
 
 int *QualityMap::getQuality_map() const
@@ -44,36 +44,36 @@ cv::Mat QualityMap::getImgQualityMap()
 {
 	int blockSize = 8;
 
-	cv::Mat imgQualityMap = cv::Mat::zeros(this->map_h * blockSize, this->map_w * blockSize, CV_8UC1);
+	cv::Mat imgQualityMap = cv::Mat::zeros(map_h * blockSize, map_w * blockSize, CV_8UC1);
 	cv::Mat block = cv::Mat(blockSize, blockSize, CV_8UC1);
 
 	int cnt = 0;
-	for (int y = 0; y < this->map_h * blockSize; y += blockSize) {
-		for (int x = 0; x < this->map_w * blockSize; x += blockSize) {
-			if (this->quality_map[cnt] == 4) block.setTo(255);
-			else block.setTo(this->quality_map[cnt] * 63);
+	for (int y = 0; y < map_h * blockSize; y += blockSize) {
+		for (int x = 0; x < map_w * blockSize; x += blockSize) {
+			if (quality_map[cnt] == 4) block.setTo(255);
+			else block.setTo(quality_map[cnt] * 63);
 			block.copyTo(imgQualityMap(cv::Rect(x, y, blockSize, blockSize)));
 			cnt++;
 		}
 	}
 
-	return imgQualityMap.rowRange(0, this->ih).colRange(0, this->iw);
+	return imgQualityMap.rowRange(0, ih).colRange(0, iw);
 }
 
 cv::Mat QualityMap::getQualityMap()
 {
 	int blockSize = 8;
 
-	cv::Mat qualityMap = cv::Mat::zeros(this->map_h * blockSize, this->map_w * blockSize, CV_8UC1);
+	cv::Mat qualityMap = cv::Mat::zeros(map_h * blockSize, map_w * blockSize, CV_8UC1);
 	cv::Mat block = cv::Mat(blockSize, blockSize, CV_8UC1);
 
 	int cnt = 0;
-	for (int y = 0; y < this->map_h * blockSize; y += blockSize) {
-		for (int x = 0; x < this->map_w * blockSize; x += blockSize) {
-			if (this->quality_map[cnt] == 4) block.setTo(100);
-			else if (this->quality_map[cnt] == 3) block.setTo(50);
-			else if (this->quality_map[cnt] == 2) block.setTo(25);
-			else if (this->quality_map[cnt] == 1) block.setTo(10);
+	for (int y = 0; y < map_h * blockSize; y += blockSize) {
+		for (int x = 0; x < map_w * blockSize; x += blockSize) {
+			if (quality_map[cnt] == 4) block.setTo(100);
+			else if (quality_map[cnt] == 3) block.setTo(50);
+			else if (quality_map[cnt] == 2) block.setTo(25);
+			else if (quality_map[cnt] == 1) block.setTo(10);
 			else block.setTo(1);
 			block.copyTo(qualityMap(cv::Rect(x, y, blockSize, blockSize)));
 			cnt++;
@@ -82,22 +82,22 @@ cv::Mat QualityMap::getQualityMap()
 
 	//cv::GaussianBlur(qualityMap, qualityMap, cv::Size(121, 121), 10.0, 10.0);
 
-	return qualityMap.rowRange(0, this->ih).colRange(0, this->iw);
+	return qualityMap.rowRange(0, ih).colRange(0, iw);
 }
 
 void QualityMap::fill_minutiae(MINUTIAE_VECTOR &minutiae)
 {
-	if(this->minutiae->alloc < minutiae.size()){
+	if(m_minutiae->alloc < minutiae.size()){
 		qDebug() << "ERROR: Too many minutiae, exceeding max.";
 	}
 	int cntr=0;
 	for(std::tuple<QPoint,int,int,int> minutia : minutiae){
-		this->minutiae->list[cntr] = (MINUTIAQ*)malloc(sizeof(MINUTIAQ));
-		this->minutiae->list[cntr]->x = std::get<0>(minutia).x();
-		this->minutiae->list[cntr]->y = std::get<0>(minutia).y();
+		m_minutiae->list[cntr] = (MINUTIAQ*)malloc(sizeof(MINUTIAQ));
+		m_minutiae->list[cntr]->x = std::get<0>(minutia).x();
+		m_minutiae->list[cntr]->y = std::get<0>(minutia).y();
 		cntr++;
 	}
-	this->minutiae->num = cntr;
+	m_minutiae->num = cntr;
 }
 
 
@@ -116,20 +116,20 @@ void QualityMap::computeImageMaps()
 
 	/* Determine the maximum amount of image padding required to support */
 	/* LFS processes.                                                    */
-	maxpad = get_max_padding_V2(this->lfsparms_V2.windowsize, this->lfsparms_V2.windowoffset,
-								this->lfsparms_V2.dirbin_grid_w, this->lfsparms_V2.dirbin_grid_h);
+	maxpad = get_max_padding_V2(lfsparms_V2.windowsize, lfsparms_V2.windowoffset,
+								lfsparms_V2.dirbin_grid_w, lfsparms_V2.dirbin_grid_h);
 
 	/* Initialize lookup table for converting integer directions */
 	/* to angles in radians.                                     */
-	if((ret = init_dir2rad(&dir2rad, this->lfsparms_V2.num_directions))){
+	if((ret = init_dir2rad(&dir2rad, lfsparms_V2.num_directions))){
 		/* Free memory allocated to this point. */
 		qDebug() << "Error: init_dir2rad()";
 	}
 
 	/* Initialize wave form lookup tables for DFT analyses. */
 	/* used for direction binarization.                             */
-	if((ret = init_dftwaves(&dftwaves, dft_coefs, this->lfsparms_V2.num_dft_waves,
-							this->lfsparms_V2.windowsize))){
+	if((ret = init_dftwaves(&dftwaves, dft_coefs, lfsparms_V2.num_dft_waves,
+							lfsparms_V2.windowsize))){
 		/* Free memory allocated to this point. */
 		free_dir2rad(dir2rad);
 		qDebug() << "Error: init_dftwaves()";
@@ -138,8 +138,8 @@ void QualityMap::computeImageMaps()
 	/* Initialize lookup table for pixel offsets to rotated grids */
 	/* used for DFT analyses.                                     */
 	if((ret = init_rotgrids(&dftgrids, iw, ih, maxpad,
-							this->lfsparms_V2.start_dir_angle, this->lfsparms_V2.num_directions,
-							this->lfsparms_V2.windowsize, this->lfsparms_V2.windowsize,
+							lfsparms_V2.start_dir_angle, lfsparms_V2.num_directions,
+							lfsparms_V2.windowsize, lfsparms_V2.windowsize,
 							RELATIVE2ORIGIN))){
 		/* Free memory allocated to this point. */
 		free_dir2rad(dir2rad);
@@ -150,7 +150,7 @@ void QualityMap::computeImageMaps()
 	/* Pad input image based on max padding. */
 	if(maxpad > 0){   /* May not need to pad at all */
 		if((ret = pad_uchar_image(&pdata, &pw, &ph, idata, iw, ih,
-								  maxpad, this->lfsparms_V2.pad_value))){
+								  maxpad, lfsparms_V2.pad_value))){
 			/* Free memory allocated to this point. */
 			free_dir2rad(dir2rad);
 			free_dftwaves(dftwaves);
@@ -188,15 +188,15 @@ void QualityMap::computeImageMaps()
 	/******************/
 
 	/* Generate block maps from the input image. */
-	gen_image_maps(&(this->direction_map),
-				   &(this->low_contrast_map),
-				   &(this->low_flow_map),
-				   &(this->high_curve_map),
-				   &(this->map_w),
-				   &(this->map_h),
+	gen_image_maps(&(direction_map),
+				   &(low_contrast_map),
+				   &(low_flow_map),
+				   &(high_curve_map),
+				   &(map_w),
+				   &(map_h),
 				   pdata, pw, ph,
 				   dir2rad, dftwaves, dftgrids,
-				   &(this->lfsparms_V2));
+				   &(lfsparms_V2));
 
 	/* Deallocate working memories. */
 	free_dir2rad(dir2rad);
@@ -230,27 +230,27 @@ void QualityMap::gen_quality_map()
 	int arrayPos, arrayPos2;
 	int QualOffset;
 
-	QualMap = (int *)malloc(this->map_w * this->map_h * sizeof(int));
+	QualMap = (int *)malloc(map_w * map_h * sizeof(int));
 	if(QualMap == (int *)NULL){
 		fprintf(stderr, "ERROR : gen_quality_map : malloc : QualMap\n");
 		qDebug() << "ERROR : gen_quality_map : malloc";
 	}
 
 	/* Foreach row of blocks in maps ... */
-	for(thisY=0; thisY<this->map_h; thisY++){
+	for(thisY=0; thisY<map_h; thisY++){
 		/* Foreach block in current row ... */
-		for(thisX=0; thisX<this->map_w; thisX++) {
+		for(thisX=0; thisX<map_w; thisX++) {
 			/* Compute block index. */
-			arrayPos=(thisY*this->map_w)+thisX;
+			arrayPos=(thisY*map_w)+thisX;
 			/* If current block has low contrast or INVALID direction ... */
-			if(this->low_contrast_map[arrayPos] || this->direction_map[arrayPos]<0)
+			if(low_contrast_map[arrayPos] || direction_map[arrayPos]<0)
 				/* Set block's quality to 0/F. */
 				QualMap[arrayPos]=0;
 			else{
 				/* Set baseline quality before looking at neighbors    */
 				/*     (will subtract QualOffset below)                */
 				/* If current block has low flow or high curvature ... */
-				if(this->low_flow_map[arrayPos] || this->high_curve_map[arrayPos])
+				if(low_flow_map[arrayPos] || high_curve_map[arrayPos])
 					/* Set block's quality initially to 3/B. */
 					QualMap[arrayPos] = 3;  /* offset will be -1..-2 */
 				/* Otherwise, block is NOT low flow AND NOT high curvature... */
@@ -259,8 +259,8 @@ void QualityMap::gen_quality_map()
 					QualMap[arrayPos]=4;    /* offset will be 0..-2 */
 
 				/* If block within NEIGHBOR_DELTA of edge ... */
-				if(thisY < NEIGHBOR_DELTA || thisY > this->map_h - 1 - NEIGHBOR_DELTA ||
-						thisX < NEIGHBOR_DELTA || thisX > this->map_w - 1 - NEIGHBOR_DELTA)
+				if(thisY < NEIGHBOR_DELTA || thisY > map_h - 1 - NEIGHBOR_DELTA ||
+						thisX < NEIGHBOR_DELTA || thisX > map_w - 1 - NEIGHBOR_DELTA)
 					/* Set block's quality to 1/E. */
 					QualMap[arrayPos]=1;
 				/* Otherwise, test neighboring blocks ... */
@@ -275,11 +275,11 @@ void QualityMap::gen_quality_map()
 						for(compX=thisX-NEIGHBOR_DELTA;
 							compX<=thisX+NEIGHBOR_DELTA;compX++) {
 							/* Compute neighboring block's index. */
-							arrayPos2 = (compY*this->map_w)+compX;
+							arrayPos2 = (compY*map_w)+compX;
 							/* If neighbor block (which might be itself) has */
 							/* low contrast or INVALID direction .. */
-							if(this->low_contrast_map[arrayPos2] ||
-									this->direction_map[arrayPos2]<0) {
+							if(low_contrast_map[arrayPos2] ||
+									direction_map[arrayPos2]<0) {
 								/* Set quality adjustment to -2. */
 								QualOffset=-2;
 								/* Done with neighborhood row. */
@@ -287,8 +287,8 @@ void QualityMap::gen_quality_map()
 							}
 							/* Otherwise, if neighbor block (which might be */
 							/* itself) has low flow or high curvature ... */
-							else if(this->low_flow_map[arrayPos2] ||
-									this->high_curve_map[arrayPos2]) {
+							else if(low_flow_map[arrayPos2] ||
+									high_curve_map[arrayPos2]) {
 								/* Set quality to -1 if not already -2. */
 								QualOffset=std::min(QualOffset,-1);
 							}
@@ -302,7 +302,7 @@ void QualityMap::gen_quality_map()
 	}
 
 	/* Set output pointer. */
-	this->quality_map = QualMap;
+	quality_map = QualMap;
 }
 
 

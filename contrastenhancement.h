@@ -10,7 +10,7 @@ class ContrastEnhancement : public QObject
 public:
 	explicit ContrastEnhancement(QObject *parent = nullptr);
 
-	void setParams(const cv::Mat &imgOriginal, const CONTRAST_PARAMS &contrastParams);
+	void setParams(const cv::Mat &m_imgOriginal, const CONTRAST_PARAMS &contrastParams);
 	void enhance();
 
 	cv::Mat getImgContrastEnhanced() const;
@@ -18,10 +18,10 @@ public:
 private:
 	void performSuace();
 
-	cv::Mat imgOriginal;
-	CONTRAST_PARAMS contrast;
+	cv::Mat m_imgOriginal;
+	CONTRAST_PARAMS m_contrast;
 
-	cv::Mat imgContrastEnhanced;
+	cv::Mat m_imgContrastEnhanced;
 
 };
 

@@ -66,16 +66,16 @@ public:
 				   const QString& label_file);
 
 private:
-	QObject *parent;
+	QObject *m_parent;
 
-	std::shared_ptr<Net<float> > net_;
-	cv::Size input_geometry_;
-	int num_channels;
-	cv::Mat mean_;
-	std::vector<std::string> labels_;
-	int batchSize;
+	std::shared_ptr<Net<float> > m_net_;
+	cv::Size m_input_geometry_;
+	int m_num_channels;
+	cv::Mat m_mean_;
+	std::vector<std::string> m_labels_;
+	int m_batchSize;
 
-	bool networkLoaded;
+	bool m_networkLoaded;
 
 	void setMean(const std::string& mean_file);
 	std::vector<float> predict(const cv::Mat& img);

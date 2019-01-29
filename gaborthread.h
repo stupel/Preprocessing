@@ -8,7 +8,7 @@ class GaborThread : public QObject
 	Q_OBJECT
 public:
 	explicit GaborThread(QObject *parent = nullptr);
-	GaborThread(cv::Mat imgInput, const GABOR_PARAMS &gaborParams, cv::Rect rect, cv::Mat enhancedImage);
+	GaborThread(cv::Mat m_imgInput, const GABOR_PARAMS &gaborParams, cv::Rect m_rect, cv::Mat m_enhancedImage);
 
 public slots:
 	void enhanceFragmentSlot();
@@ -19,12 +19,12 @@ signals:
 	void enhanceFragmentSignal();
 
 private:
-	cv::Mat imgInput; // obrazok s odtlackom
+	cv::Mat m_imgInput; // obrazok s odtlackom
 
-	GABOR_PARAMS gabor;
+	GABOR_PARAMS m_gabor;
 
-	cv::Rect rect; // oblast odtlacku, ktoru prefiltruje konkretne vlakno
-	cv::Mat enhancedImage; // prefiltrovany odtlacok
+	cv::Rect m_rect; // oblast odtlacku, ktoru prefiltruje konkretne vlakno
+	cv::Mat m_enhancedImage; // prefiltrovany odtlacok
 
 
 };

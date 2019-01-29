@@ -70,11 +70,11 @@ public:
 		data[key] = EMPTY;
 		if (col && data[key - 1] == INNER) // left
 			data[key - 1] = CONTOUR;
-		if (col < colsm && data[key + 1] == INNER) // right
+		if (col < m_colsm && data[key + 1] == INNER) // right
 			data[key + 1] = CONTOUR;
 		if (row && data[key - cols] == INNER) // up
 			data[key - cols] = CONTOUR;
-		if (row < rowsm && data[key + cols] == INNER) // down
+		if (row < m_rowsm && data[key + cols] == INNER) // down
 			data[key + cols] = CONTOUR;
 	} // end set_point_empty();
 
@@ -84,8 +84,8 @@ public:
 	inline void set_point_empty_C8(int row, int col) {
 		int key = row * cols + col;
 		data[key] = EMPTY;
-		bool left_ok = col, right_ok = col < colsm,
-				up_ok = row, down_ok = row < rowsm;
+		bool left_ok = col, right_ok = col < m_colsm,
+				up_ok = row, down_ok = row < m_rowsm;
 		if (left_ok && up_ok && data[key - 1] == INNER) // left
 			data[key - 1] = CONTOUR;
 		if (right_ok && data[key + 1] == INNER) // right
@@ -147,10 +147,10 @@ public:
 	const cv::Mat3b & illus(cv::Vec3b contour_color = cv::Vec3b(0, 0, 255),
 							cv::Vec3b inner_color = cv::Vec3b(128, 128, 128),
 							cv::Vec3b empty_color = cv::Vec3b(0, 0, 0)) {
-		_illus.create(rows, cols);
+		m_illus.create(rows, cols);
 		unsigned int npixels = cols * rows;
 		const uchar* in_ptr = ptr<uchar>(0);
-		cv::Vec3b* out_ptr = _illus.ptr<cv::Vec3b>(0);
+		cv::Vec3b* out_ptr = m_illus.ptr<cv::Vec3b>(0);
 		for (unsigned int pix_idx = 0; pix_idx < npixels; ++pix_idx) {
 			switch (*in_ptr++) {
 			case EMPTY:
@@ -166,7 +166,7 @@ public:
 			} // end switch (control)
 			++out_ptr;
 		} // end loop pix_idx
-		return _illus;
+		return m_illus;
 	} // end illus()
 
 private:
@@ -182,8 +182,8 @@ private:
 		assert(img.isContinuous());
 		assert(isContinuous());
 		setTo(EMPTY);
-		colsm = cols - 1;
-		rowsm = rows - 1;
+		m_colsm = cols - 1;
+		m_rowsm = rows - 1;
 		const uchar *img_data = img.data, *img_ptr = img.data;
 		uchar* out_ptr = ptr<uchar>(0);
 		if (C8)
@@ -201,11 +201,11 @@ private:
 				//printf("row:%i, col:%i\n", row, col);
 				if (*img_ptr) {
 					int key = row * cols + col;
-					if ((!col || col == colsm || !row || row == rowsm) // border
+					if ((!col || col == m_colsm || !row || row == m_rowsm) // border
 							|| (col            && *img_ptr != img_data[key - 1]) //left
-							|| (col < colsm    && *img_ptr != img_data[key + 1]) // right
+							|| (col < m_colsm    && *img_ptr != img_data[key + 1]) // right
 							|| (row            && *img_ptr != img_data[key - cols]) // up
-							|| (row < rowsm    && *img_ptr != img_data[key + cols])) // down
+							|| (row < m_rowsm    && *img_ptr != img_data[key + cols])) // down
 					{ // contour
 						// printf("row:%i, col:%i is contour!\n", row, col);
 						*out_ptr = CONTOUR;
@@ -230,8 +230,8 @@ private:
 				//printf("row:%i, col:%i\n", row, col);
 				if (*img_ptr) {
 					int key = row * cols + col;
-					bool left_ok = col, right_ok = col < colsm,
-							up_ok = row, down_ok = row < rowsm;
+					bool left_ok = col, right_ok = col < m_colsm,
+							up_ok = row, down_ok = row < m_rowsm;
 					if ((!left_ok || !right_ok || !up_ok || !down_ok) // border
 							|| (left_ok              && *img_ptr != img_data[key - 1]) // L
 							|| (right_ok             && *img_ptr != img_data[key + 1]) // R
@@ -257,8 +257,8 @@ private:
 
 	//////////////////////////////////////////////////////////////////////////////
 
-	int rowsm, colsm;
-	cv::Mat3b _illus;
+	int m_rowsm, m_colsm;
+	cv::Mat3b m_illus;
 }; // end class Imagecontour
 
 #endif // IMAGECONTOUR_H

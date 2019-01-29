@@ -1,15 +1,16 @@
 #include "preprocessing_caffenetwork.h"
 
 PreprocessingCaffeNetwork::PreprocessingCaffeNetwork()
+	: m_networkLoaded(false)
 {
-	this->networkLoaded = false;
+
 }
 
 PreprocessingCaffeNetwork::~PreprocessingCaffeNetwork()
 {
-	if (this->networkLoaded) {
-		net_.reset();
-		mean_.release();
+	if (m_networkLoaded) {
+		m_net_.reset();
+		m_mean_.release();
 	}
 }
 
@@ -35,14 +36,14 @@ std::vector<int> PreprocessingCaffeNetwork::caffeArgmax(const std::vector<float>
 std::vector<Prediction> PreprocessingCaffeNetwork::classify(const cv::Mat img)
 {
 	int N = 5;
-	std::vector<float> output = this->predict(img);
+	std::vector<float> output = predict(img);
 
-	N = std::min<int>(labels_.size(), N);
+	N = std::min<int>(m_labels_.size(), N);
 	std::vector<int> maxN = caffeArgmax(output, N);
 	std::vector<Prediction> predictions;
 	for (int i = 0; i < N; ++i) {
 		int idx = maxN[i];
-		predictions.push_back(std::make_pair(labels_[idx], output[idx]));
+		predictions.push_back(std::make_pair(m_labels_[idx], output[idx]));
 	}
 
 	return predictions;
@@ -60,36 +61,36 @@ void PreprocessingCaffeNetwork::loadModel(const QString &model_file,
 #endif
 
 	/* Load the network. */
-	net_.reset(new Net<float>(model_file.toStdString(), TEST));
-	net_->CopyTrainedLayersFrom(trained_file.toStdString());
+	m_net_.reset(new Net<float>(model_file.toStdString(), TEST));
+	m_net_->CopyTrainedLayersFrom(trained_file.toStdString());
 
-	CHECK_EQ(net_->num_inputs(), 1) << "Network should have exactly one input.";
-	CHECK_EQ(net_->num_outputs(), 1) << "Network should have exactly one output.";
+	CHECK_EQ(m_net_->num_inputs(), 1) << "Network should have exactly one input.";
+	CHECK_EQ(m_net_->num_outputs(), 1) << "Network should have exactly one output.";
 
-	Blob<float>* input_layer = net_->input_blobs()[0];
-	num_channels = input_layer->channels();
-	CHECK(num_channels == 3 || num_channels == 1) << "Input layer should have 1 or 3 channels.";
-	input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
+	Blob<float>* input_layer = m_net_->input_blobs()[0];
+	m_num_channels = input_layer->channels();
+	CHECK(m_num_channels == 3 || m_num_channels == 1) << "Input layer should have 1 or 3 channels.";
+	m_input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
 
 	/* Load the binaryproto mean file. */
-	this->setMean(mean_file.toStdString());
+	setMean(mean_file.toStdString());
 
 	/* Load labels. */
 	std::ifstream labels(label_file.toStdString().c_str());
 	CHECK(labels) << "Unable to open labels file " << label_file.toStdString();
 	std::string line;
 	while (std::getline(labels, line))
-		labels_.push_back(string(line));
+		m_labels_.push_back(string(line));
 
-	Blob<float>* output_layer = net_->output_blobs()[0];
-	CHECK_EQ(labels_.size(), output_layer->channels()) << "Number of labels is different from the output layer dimension.";
+	Blob<float>* output_layer = m_net_->output_blobs()[0];
+	CHECK_EQ(m_labels_.size(), output_layer->channels()) << "Number of labels is different from the output layer dimension.";
 
-	this->networkLoaded = true;
+	m_networkLoaded = true;
 }
 
 bool PreprocessingCaffeNetwork::getNetworkLoaded() const
 {
-	return networkLoaded;
+	return m_networkLoaded;
 }
 
 void PreprocessingCaffeNetwork::setMean(const std::string& mean_file)
@@ -100,13 +101,13 @@ void PreprocessingCaffeNetwork::setMean(const std::string& mean_file)
 	/* Convert from BlobProto to Blob<float> */
 	Blob<float> mean_blob;
 	mean_blob.FromProto(blob_proto);
-	CHECK_EQ(mean_blob.channels(), num_channels)
+	CHECK_EQ(mean_blob.channels(), m_num_channels)
 			<< "Number of channels of mean file doesn't match input layer.";
 
 	/* The format of the mean file is planar 32-bit float BGR or grayscale. */
 	std::vector<cv::Mat> channels;
 	float* data = mean_blob.mutable_cpu_data();
-	for (int i = 0; i < num_channels; ++i) {
+	for (int i = 0; i < m_num_channels; ++i) {
 		/* Extract an individual channel. */
 		cv::Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
 		channels.push_back(channel);
@@ -120,32 +121,32 @@ void PreprocessingCaffeNetwork::setMean(const std::string& mean_file)
 	/* Compute the global mean pixel value and create a mean image
 	* filled with this value. */
 	cv::Scalar channel_mean = cv::mean(mean);
-	mean_ = cv::Mat(input_geometry_, mean.type(), channel_mean);
+	m_mean_ = cv::Mat(m_input_geometry_, mean.type(), channel_mean);
 }
 
 std::vector<float> PreprocessingCaffeNetwork::predict(const cv::Mat& img)
 {
-	Blob<float>* input_layer = this->net_->input_blobs()[0];
-	input_layer->Reshape(1, this->num_channels,
-						 this->input_geometry_.height,
-						 this->input_geometry_.width);
+	Blob<float>* input_layer = m_net_->input_blobs()[0];
+	input_layer->Reshape(1, m_num_channels,
+						 m_input_geometry_.height,
+						 m_input_geometry_.width);
 
 	/* Forward dimension change to all layers. */
-	this->net_->Reshape();
+	m_net_->Reshape();
 
 	std::vector<cv::Mat> input_channels;
-	this->wrapInputLayer(&input_channels);
+	wrapInputLayer(&input_channels);
 
-	this->preprocess(img, &input_channels);
+	preprocess(img, &input_channels);
 
-	Blob<float>* output_layer = this->net_->output_blobs()[0];
+	Blob<float>* output_layer = m_net_->output_blobs()[0];
 	const float* begin = output_layer->cpu_data();
 	const float* end = begin + output_layer->channels();
 
-	net_->Forward();
+	m_net_->Forward();
 
 	/* Copy the output layer to a std::vector */
-	output_layer = this->net_->output_blobs()[0];
+	output_layer = m_net_->output_blobs()[0];
 	begin = output_layer->cpu_data();
 	end = begin + output_layer->channels();
 
@@ -154,7 +155,7 @@ std::vector<float> PreprocessingCaffeNetwork::predict(const cv::Mat& img)
 
 void PreprocessingCaffeNetwork::wrapInputLayer(std::vector<cv::Mat>* input_channels)
 {
-	Blob<float>* input_layer = net_->input_blobs()[0];
+	Blob<float>* input_layer = m_net_->input_blobs()[0];
 
 	int width = input_layer->width();
 	int height = input_layer->height();
@@ -170,32 +171,32 @@ void PreprocessingCaffeNetwork::preprocess(const cv::Mat& img, std::vector<cv::M
 {
 	/* Convert the input image to the input image format of the network. */
 	cv::Mat sample;
-	if (img.channels() == 3 && num_channels == 1)
+	if (img.channels() == 3 && m_num_channels == 1)
 		cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
-	else if (img.channels() == 4 && num_channels == 1)
+	else if (img.channels() == 4 && m_num_channels == 1)
 		cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
-	else if (img.channels() == 4 && num_channels == 3)
+	else if (img.channels() == 4 && m_num_channels == 3)
 		cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
-	else if (img.channels() == 1 && num_channels == 3)
+	else if (img.channels() == 1 && m_num_channels == 3)
 		cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
 	else
 		sample = img;
 
 	cv::Mat sample_resized;
 
-	if (sample.size() != input_geometry_)
-		cv::resize(sample, sample_resized, input_geometry_);
+	if (sample.size() != m_input_geometry_)
+		cv::resize(sample, sample_resized, m_input_geometry_);
 	else
 		sample_resized = sample;
 
 	cv::Mat sample_float;
-	if (num_channels == 3)
+	if (m_num_channels == 3)
 		sample_resized.convertTo(sample_float, CV_32FC3);
 	else
 		sample_resized.convertTo(sample_float, CV_32FC1);
 
 	cv::Mat sample_normalized;
-	cv::subtract(sample_float, mean_, sample_normalized);
+	cv::subtract(sample_float, m_mean_, sample_normalized);
 
 	/* This operation will write the separate BGR planes directly to the
 	* input layer of the network because it is wrapped by the cv::Mat
@@ -204,7 +205,7 @@ void PreprocessingCaffeNetwork::preprocess(const cv::Mat& img, std::vector<cv::M
 	cv::split(sample_normalized, *input_channels);
 
 	CHECK(reinterpret_cast<float*>(input_channels->at(0).data)
-		  == net_->input_blobs()[0]->cpu_data())
+		  == m_net_->input_blobs()[0]->cpu_data())
 			<< "Input channels are not wrapping the input layer of the network.";
 }
 
@@ -216,32 +217,32 @@ void PreprocessingCaffeNetwork::preprocessBatch(const vector<cv::Mat> imgs, std:
 
 		/* Convert the input image to the input image format of the network. */
 		cv::Mat sample;
-		if (img.channels() == 3 && this->num_channels == 1)
+		if (img.channels() == 3 && m_num_channels == 1)
 			cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
-		else if (img.channels() == 4 && this->num_channels == 1)
+		else if (img.channels() == 4 && m_num_channels == 1)
 			cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
-		else if (img.channels() == 4 && this->num_channels == 3)
+		else if (img.channels() == 4 && m_num_channels == 3)
 			cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
-		else if (img.channels() == 1 && this->num_channels == 3)
+		else if (img.channels() == 1 && m_num_channels == 3)
 			cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
 		else
 			sample = img;
 
 		cv::Mat sample_resized;
-		if (sample.size() != this->input_geometry_)
-			cv::resize(sample, sample_resized, this->input_geometry_);
+		if (sample.size() != m_input_geometry_)
+			cv::resize(sample, sample_resized, m_input_geometry_);
 		else
 			sample_resized = sample;
 
 		cv::Mat sample_float;
-		if (this->num_channels == 3)
+		if (m_num_channels == 3)
 			sample_resized.convertTo(sample_float, CV_32FC3);
 		else
 			sample_resized.convertTo(sample_float, CV_32FC1);
 
 		cv::Mat sample_normalized;
 
-		cv::subtract(sample_float, this->mean_, sample_normalized);
+		cv::subtract(sample_float, m_mean_, sample_normalized);
 		sample_normalized /= 255.0;
 		/* This operation will write the separate BGR planes directly to the
 		 * input layer of the network because it is wrapped by the cv::Mat
@@ -256,7 +257,7 @@ void PreprocessingCaffeNetwork::preprocessBatch(const vector<cv::Mat> imgs, std:
 
 void PreprocessingCaffeNetwork::wrapBatchInputLayer(std::vector<std::vector<cv::Mat> > *input_batch)
 {
-	Blob<float>* input_layer_ = this->net_->input_blobs()[0];
+	Blob<float>* input_layer_ = m_net_->input_blobs()[0];
 
 	int width = input_layer_->width();
 	int height = input_layer_->height();
@@ -275,27 +276,27 @@ void PreprocessingCaffeNetwork::wrapBatchInputLayer(std::vector<std::vector<cv::
 
 std::vector<float> PreprocessingCaffeNetwork::predictBatch(const std::vector< cv::Mat > imgs)
 {
-	Blob<float>* input_layer = this->net_->input_blobs()[0];
-	input_layer->Reshape(imgs.size(), this->num_channels,
-						 this->input_geometry_.height,
-						 this->input_geometry_.width);
+	Blob<float>* input_layer = m_net_->input_blobs()[0];
+	input_layer->Reshape(imgs.size(), m_num_channels,
+						 m_input_geometry_.height,
+						 m_input_geometry_.width);
 
 	/* Forward dimension change to all layers. */
-	this->net_->Reshape();
+	m_net_->Reshape();
 
 	std::vector<std::vector<cv::Mat>> input_batch;
-	this->wrapBatchInputLayer(&input_batch);
+	wrapBatchInputLayer(&input_batch);
 
-	this->preprocessBatch(imgs, &input_batch);
+	preprocessBatch(imgs, &input_batch);
 
-	Blob<float>* output_layer = this->net_->output_blobs()[0];
+	Blob<float>* output_layer = m_net_->output_blobs()[0];
 	const float* begin = output_layer->cpu_data();
 	const float* end = begin + output_layer->channels()*imgs.size();
 
-	this->net_->Forward();
+	m_net_->Forward();
 
 	/* Copy the output layer to a std::vector */
-	output_layer = this->net_->output_blobs()[0];
+	output_layer = m_net_->output_blobs()[0];
 	begin = output_layer->cpu_data();
 	end = begin + output_layer->channels()*imgs.size();
 
@@ -304,7 +305,7 @@ std::vector<float> PreprocessingCaffeNetwork::predictBatch(const std::vector< cv
 
 std::vector<std::vector<Prediction>> PreprocessingCaffeNetwork::classifyBatch(const std::vector< cv::Mat > imgs, int num_classes)
 {
-	std::vector<float> output_batch = this->predictBatch(imgs);
+	std::vector<float> output_batch = predictBatch(imgs);
 
 	std::vector< std::vector<Prediction> > predictions;
 	for(int j = 0; j < imgs.size(); j++){
@@ -313,7 +314,7 @@ std::vector<std::vector<Prediction>> PreprocessingCaffeNetwork::classifyBatch(co
 		std::vector<Prediction> prediction_single;
 		for (int i = 0; i < num_classes; ++i) {
 			int idx = maxN[i];
-			prediction_single.push_back(std::make_pair(this->labels_[idx], output[idx]));
+			prediction_single.push_back(std::make_pair(m_labels_[idx], output[idx]));
 		}
 		predictions.push_back(std::vector<Prediction>(prediction_single));
 	}

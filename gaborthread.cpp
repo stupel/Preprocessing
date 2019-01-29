@@ -5,8 +5,11 @@ GaborThread::GaborThread(QObject *parent) : QObject(parent)
 
 }
 
-GaborThread::GaborThread(cv::Mat img, const GABOR_PARAMS &gaborParams, cv::Rect rect, cv::Mat enhancedImage):
-	imgInput(img), gabor(gaborParams), rect(rect), enhancedImage(enhancedImage)
+GaborThread::GaborThread(cv::Mat img, const GABOR_PARAMS &gaborParams, cv::Rect rect, cv::Mat enhancedImage)
+	: m_imgInput(img)
+	, m_gabor(gaborParams)
+	, m_rect(rect)
+	, m_enhancedImage(enhancedImage)
 {
 
 }
@@ -17,15 +20,15 @@ void GaborThread::enhanceFragmentSlot()
 	cv::Mat subMat, sub;
 	cv::Scalar s;
 
-	for(int i = this->rect.y; i < this->rect.y + this->rect.height; i++){
-		for(int j = this->rect.x; j < this->rect.x + this->rect.width; j++){
-			if (*this->gabor.useFrequencyMap) kernel = cv::getGaborKernel(cv::Size(this->gabor.blockSize,this->gabor.blockSize), this->gabor.sigma, this->gabor.oMap->at<float>(i,j), this->gabor.fMap->at<float>(i,j), 1, 0, CV_32F);
-			else kernel = cv::getGaborKernel(cv::Size(this->gabor.blockSize,this->gabor.blockSize), this->gabor.sigma, this->gabor.oMap->at<float>(i,j), this->gabor.lambda, 1, 0, CV_32F);
-			subMat = this->imgInput(cv::Rect(j-this->gabor.blockSize/2, i-this->gabor.blockSize/2, this->gabor.blockSize, this->gabor.blockSize));
+	for(int i = m_rect.y; i < m_rect.y + m_rect.height; i++){
+		for(int j = m_rect.x; j < m_rect.x + m_rect.width; j++){
+			if (*m_gabor.useFrequencyMap) kernel = cv::getGaborKernel(cv::Size(m_gabor.blockSize,m_gabor.blockSize), m_gabor.sigma, m_gabor.oMap->at<float>(i,j), m_gabor.fMap->at<float>(i,j), 1, 0, CV_32F);
+			else kernel = cv::getGaborKernel(cv::Size(m_gabor.blockSize,m_gabor.blockSize), m_gabor.sigma, m_gabor.oMap->at<float>(i,j), m_gabor.lambda, 1, 0, CV_32F);
+			subMat = m_imgInput(cv::Rect(j-m_gabor.blockSize/2, i-m_gabor.blockSize/2, m_gabor.blockSize, m_gabor.blockSize));
 			subMat.convertTo(sub, CV_32F);
 			cv::multiply(sub, kernel, sub);
 			s = cv::sum(sub);
-			this->enhancedImage.at<float>(i,j) = s[0];
+			m_enhancedImage.at<float>(i,j) = s[0];
 		}
 	}
 	emit enhancementDoneSignal();

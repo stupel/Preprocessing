@@ -14,18 +14,18 @@ public:
 	cv::Mat getImgMask() const;
 
 	void loadMaskModel(const CAFFE_FILES &maskFiles);
-	void setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams);
+	void setParams(const cv::Mat &m_imgOriginal, const MASK_PARAMS &maskParams);
 	void generate();
 
 private:
-	PreprocessingCaffeNetwork *maskClassifier;
+	PreprocessingCaffeNetwork *m_maskClassifier;
 
-	cv::Mat imgOriginal;
-	MASK_PARAMS mask;
+	cv::Mat m_imgOriginal;
+	MASK_PARAMS m_mask;
 
-	cv::Mat imgMask;
+	cv::Mat m_imgMask;
 
-	bool isMaskModelLoaded;
+	bool m_isMaskModelLoaded;
 
 	void smooth(QImage &smoothedMask, int maskBlockSize);
 

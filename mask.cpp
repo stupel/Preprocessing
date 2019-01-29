@@ -1,47 +1,49 @@
 #include "mask.h"
 
-Mask::Mask(QObject *parent) : QObject(parent)
+Mask::Mask(QObject *parent)
+	: QObject(parent)
+	, m_isMaskModelLoaded(false)
 {
-	this->isMaskModelLoaded = false;
+
 }
 
 void Mask::loadMaskModel(const CAFFE_FILES &maskFiles)
 {
-	if (this->isMaskModelLoaded) {
-		delete maskClassifier;
-		this->isMaskModelLoaded = false;
+	if (m_isMaskModelLoaded) {
+		delete m_maskClassifier;
+		m_isMaskModelLoaded = false;
 	}
 
-	this->maskClassifier = new PreprocessingCaffeNetwork;
-	this->maskClassifier->loadModel(maskFiles.model, maskFiles.trained, maskFiles.imageMean, maskFiles.label);
+	m_maskClassifier = new PreprocessingCaffeNetwork;
+	m_maskClassifier->loadModel(maskFiles.model, maskFiles.trained, maskFiles.imageMean, maskFiles.label);
 
-	this->isMaskModelLoaded = true;
+	m_isMaskModelLoaded = true;
 }
 
 void Mask::setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams)
 {
-	this->imgOriginal = imgOriginal;
-	this->mask = maskParams;
+	m_imgOriginal = imgOriginal;
+	m_mask = maskParams;
 }
 
 void Mask::generate()
 {
 
-	if (*this->mask.cpuOnly) Caffe::set_mode(Caffe::CPU);
+	if (*m_mask.cpuOnly) Caffe::set_mode(Caffe::CPU);
 	else Caffe::set_mode(Caffe::GPU);
 
-	this->imgMask = cv::Mat::zeros(this->imgOriginal.rows + this->mask.blockSize, this->imgOriginal.cols + this->mask.blockSize, CV_8UC1);
+	m_imgMask = cv::Mat::zeros(m_imgOriginal.rows + m_mask.blockSize, m_imgOriginal.cols + m_mask.blockSize, CV_8UC1);
 
-	cv::Mat whiteBlock = cv::Mat(this->mask.blockSize, this->mask.blockSize, CV_8UC1);
+	cv::Mat whiteBlock = cv::Mat(m_mask.blockSize, m_mask.blockSize, CV_8UC1);
 	whiteBlock.setTo(255);
 
 	cv::Mat borderedOriginal;
-	cv::copyMakeBorder(this->imgOriginal, borderedOriginal, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, this->mask.exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+	cv::copyMakeBorder(m_imgOriginal, borderedOriginal, m_mask.exBlockSize, m_mask.exBlockSize, m_mask.exBlockSize, m_mask.exBlockSize, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
 	std::vector<cv::Mat> blocks;
-	int odd = this->mask.exBlockSize % 2;
-	for (int x = this->mask.exBlockSize; x < this->imgOriginal.cols + this->mask.exBlockSize; x += this->mask.blockSize) {
-		for (int y = this->mask.exBlockSize; y < this->imgOriginal.rows + this->mask.exBlockSize; y += this->mask.blockSize) {
-			blocks.push_back(borderedOriginal.colRange(x - this->mask.exBlockSize/2, x + this->mask.exBlockSize/2 + odd).rowRange(y - this->mask.exBlockSize/2, y + this->mask.exBlockSize/2 + odd));
+	int odd = m_mask.exBlockSize % 2;
+	for (int x = m_mask.exBlockSize; x < m_imgOriginal.cols + m_mask.exBlockSize; x += m_mask.blockSize) {
+		for (int y = m_mask.exBlockSize; y < m_imgOriginal.rows + m_mask.exBlockSize; y += m_mask.blockSize) {
+			blocks.push_back(borderedOriginal.colRange(x - m_mask.exBlockSize/2, x + m_mask.exBlockSize/2 + odd).rowRange(y - m_mask.exBlockSize/2, y + m_mask.exBlockSize/2 + odd));
 
 		}
 	}
@@ -49,33 +51,33 @@ void Mask::generate()
 	std::vector<std::vector<Prediction>> predictions;
 
 	//Use Batch
-	predictions = this->maskClassifier->classifyBatch(blocks, 2);
+	predictions = m_maskClassifier->classifyBatch(blocks, 2);
 
 	//Without Batch
 	/*for (int i = 0; i < blocks.size(); i++) {
-		predictions.push_back(this->maskClassifier->classify(blocks[i]));
+		predictions.push_back(maskClassifier->classify(blocks[i]));
 	}*/
 
 	std::vector<Prediction> prediction;
 	int cnt = 0;
-	for (int x = 0; x < this->imgOriginal.cols; x += this->mask.blockSize) {
-		for (int y = 0; y < this->imgOriginal.rows; y += this->mask.blockSize) {
+	for (int x = 0; x < m_imgOriginal.cols; x += m_mask.blockSize) {
+		for (int y = 0; y < m_imgOriginal.rows; y += m_mask.blockSize) {
 			prediction = predictions[cnt];
 			if (prediction[0].first[0] == 'f' || prediction[0].first[0] == 'F') {
-				whiteBlock.copyTo(this->imgMask(cv::Rect(x, y, this->mask.blockSize, this->mask.blockSize)));
+				whiteBlock.copyTo(m_imgMask(cv::Rect(x, y, m_mask.blockSize, m_mask.blockSize)));
 			}
 			cnt++;
 		}
 	}
 
-	this->imgMask = this->imgMask.rowRange(0, this->imgOriginal.rows).colRange(0, this->imgOriginal.cols);
+	m_imgMask = m_imgMask.rowRange(0, m_imgOriginal.rows).colRange(0, m_imgOriginal.cols);
 
-	if (this->mask.useSmooth) {
-		QImage smoothedMask(this->imgMask.cols, this->imgMask.rows, QImage::Format_Grayscale8);
-		this->smooth(smoothedMask, this->mask.blockSize);
+	if (m_mask.useSmooth) {
+		QImage smoothedMask(m_imgMask.cols, m_imgMask.rows, QImage::Format_Grayscale8);
+		smooth(smoothedMask, m_mask.blockSize);
 
-		this->imgMask = Helper::QImage2Mat(smoothedMask, CV_8UC1);
-		cv::erode(this->imgMask, this->imgMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(this->mask.blockSize, this->mask.blockSize)), cv::Point(-1,-1), 1);
+		m_imgMask = Helper::QImage2Mat(smoothedMask, CV_8UC1);
+		cv::erode(m_imgMask, m_imgMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(m_mask.blockSize, m_mask.blockSize)), cv::Point(-1,-1), 1);
 	}
 }
 
@@ -84,7 +86,7 @@ void Mask::smooth(QImage &smoothedMask, int maskBlockSize)
 	cv::Mat polygon;
 	std::vector<std::vector<cv::Point>> contours;
 
-	polygon = this->imgMask.clone();
+	polygon = m_imgMask.clone();
 	cv::findContours(polygon, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
 
 	// deleting black holes
@@ -119,5 +121,5 @@ void Mask::smooth(QImage &smoothedMask, int maskBlockSize)
 
 cv::Mat Mask::getImgMask() const
 {
-	return imgMask;
+	return m_imgMask;
 }

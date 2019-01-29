@@ -10,7 +10,7 @@ class OrientationMap : public QObject
 public:
 	explicit OrientationMap(QObject *parent = nullptr);
 
-	void setParams(const cv::Mat &imgInput, OMAP_PARAMS omap);
+	void setParams(const cv::Mat &m_imgInput, OMAP_PARAMS m_omap);
 	void computeBasicMapCPU();
 	void computeBasicMapGPU();
 	void computeAdvancedMapCPU();
@@ -27,21 +27,21 @@ public:
 
 
 private:
-	QTime timer;
+	QTime m_timer;
 
-	cv::Mat imgInput; // obrazok odtlacku
-	af::array imgInputAF;
+	cv::Mat m_imgInput; // obrazok odtlacku
+	af::array m_imgInputAF;
 
-	OMAP_PARAMS omap;
+	OMAP_PARAMS m_omap;
 
-	cv::Mat oMap_basic; // BASIC smerova mapa (vyhladena, jeden smer pre cely blok)
-	af::array oMapAF_basic;
-	cv::Mat oMap_advanced; // ADVANCED smerova mapa (vyhladena, kazdy pixel ma svoj smer)
-	af::array oMapAF_advanced;
+	cv::Mat m_oMap_basic; // BASIC smerova mapa (vyhladena, jeden smer pre cely blok)
+	af::array m_oMapAF_basic;
+	cv::Mat m_oMap_advanced; // ADVANCED smerova mapa (vyhladena, kazdy pixel ma svoj smer)
+	af::array m_oMapAF_advanced;
 
-	cv::Mat imgOMap_basic; // obrazok BASIC smerovej mapy (ADVANCED mapa sa neda zobrazit, lebo kazdy pixel ma iny smer)
+	cv::Mat m_imgOMap_basic; // obrazok BASIC smerovej mapy (ADVANCED mapa sa neda zobrazit, lebo kazdy pixel ma iny smer)
 
-	float duration;
+	float m_duration;
 
 };
 

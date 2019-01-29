@@ -22,11 +22,11 @@ public:
 private:
 
 	// INPUT
-	cv::Mat imgEnhanced;
-	BINARIZATION_PARAMS binarization;
+	cv::Mat m_imgEnhanced;
+	BINARIZATION_PARAMS m_binarization;
 
 	// OUTPUT
-	cv::Mat imgBinarized;
+	cv::Mat m_imgBinarized;
 
 
 	// PRIVATE FUNCTIONS

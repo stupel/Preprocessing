@@ -107,30 +107,30 @@ cv::Rect Thinning::copy_bounding_box_plusone(const cv::Mat1b& img, cv::Mat1b& ou
 bool Thinning::thinGuoHallFast(const cv::Mat1b& img, bool inverted, bool crop_img_before, int max_iters)
 {
 	if (inverted) {
-		this->imgSkeletonInverted = cv::Mat(img.rows, img.cols, CV_8UC1);
-		return this->thin_fast_custom_voronoi_fn(img, inverted, need_set_guo_hall, crop_img_before, max_iters);
+		m_imgSkeletonInverted = cv::Mat(img.rows, img.cols, CV_8UC1);
+		return thin_fast_custom_voronoi_fn(img, inverted, need_set_guo_hall, crop_img_before, max_iters);
 	}
 	else {
-		this->imgSkeleton = cv::Mat(img.rows, img.cols, CV_8UC1);
-		return this->thin_fast_custom_voronoi_fn(this->invertColor(img), inverted, need_set_guo_hall, crop_img_before, max_iters);
+		m_imgSkeleton = cv::Mat(img.rows, img.cols, CV_8UC1);
+		return thin_fast_custom_voronoi_fn(invertColor(img), inverted, need_set_guo_hall, crop_img_before, max_iters);
 	}
 }
 
 bool Thinning::thin_fast_custom_voronoi_fn(const cv::Mat1b& img, bool inverted, VoronoiFn voronoi_fn, bool crop_img_before, int max_iters)
 {
 	if (inverted) {
-		this->_bbox  = copy_bounding_box_plusone(img, this->imgSkeletonInverted, crop_img_before);
-		skelcontour.from_image_C4(this->imgSkeletonInverted);
+		m_bbox  = copy_bounding_box_plusone(img, m_imgSkeletonInverted, crop_img_before);
+		m_skelcontour.from_image_C4(m_imgSkeletonInverted);
 	}
 	else {
-		this->_bbox  = copy_bounding_box_plusone(img, this->imgSkeleton, crop_img_before);
-		skelcontour.from_image_C4(this->imgSkeleton);
+		m_bbox  = copy_bounding_box_plusone(img, m_imgSkeleton, crop_img_before);
+		m_skelcontour.from_image_C4(m_imgSkeleton);
 	}
 
-	int cols = skelcontour.cols, rows = skelcontour.rows;
+	int cols = m_skelcontour.cols, rows = m_skelcontour.rows;
 
 	// clear queues
-	uchar * skelcontour_data = skelcontour.data;
+	uchar * skelcontour_data = m_skelcontour.data;
 
 	int niters = 0;
 	bool change_made = true;
@@ -140,24 +140,24 @@ bool Thinning::thin_fast_custom_voronoi_fn(const cv::Mat1b& img, bool inverted, 
 		for (unsigned short iter = 0; iter < 2; ++iter) {
 
 			uchar *skelcontour_ptr = skelcontour_data;
-			rows_to_set.clear();
-			cols_to_set.clear();
+			m_rowsToSet.clear();
+			m_colsToSet.clear();
 
 			// for each point in skelcontour, check if it needs to be changed
 			for (int row = 0; row < rows; ++row) {
 				for (int col = 0; col < cols; ++col) {
 					if (*skelcontour_ptr++ == ImageContour::CONTOUR && voronoi_fn(skelcontour_data, iter, col, row, cols)) {
-						cols_to_set.push_back(col);
-						rows_to_set.push_back(row);
+						m_colsToSet.push_back(col);
+						m_rowsToSet.push_back(row);
 					}
 				}
 			}
 
 			// set all points in rows_to_set (of skel)
-			unsigned int rows_to_set_size = rows_to_set.size();
+			unsigned int rows_to_set_size = m_rowsToSet.size();
 			for (unsigned int pt_idx = 0; pt_idx < rows_to_set_size; ++pt_idx) {
-				if (!change_made) change_made = (skelcontour(rows_to_set[pt_idx], cols_to_set[pt_idx]));
-				skelcontour.set_point_empty_C4(rows_to_set[pt_idx], cols_to_set[pt_idx]);
+				if (!change_made) change_made = (m_skelcontour(m_rowsToSet[pt_idx], m_colsToSet[pt_idx]));
+				m_skelcontour.set_point_empty_C4(m_rowsToSet[pt_idx], m_colsToSet[pt_idx]);
 			} // end for (pt_idx)
 
 			if ((niters++) >= max_iters) // must be at the end of the loop
@@ -165,9 +165,9 @@ bool Thinning::thin_fast_custom_voronoi_fn(const cv::Mat1b& img, bool inverted, 
 		}
 	}
 
-	if (inverted) this->imgSkeletonInverted = this->invertColor(skelcontour != ImageContour::EMPTY);
-	else this->imgSkeleton = this->invertColor(skelcontour != ImageContour::EMPTY);
-	_has_converged = !change_made;
+	if (inverted) m_imgSkeletonInverted = invertColor(m_skelcontour != ImageContour::EMPTY);
+	else m_imgSkeleton = invertColor(m_skelcontour != ImageContour::EMPTY);
+	m_has_converged = !change_made;
 
 	return true;
 }
@@ -175,10 +175,10 @@ bool Thinning::thin_fast_custom_voronoi_fn(const cv::Mat1b& img, bool inverted, 
 
 cv::Mat Thinning::getImgSkeleton() const
 {
-	return imgSkeleton;
+	return m_imgSkeleton;
 }
 
 cv::Mat Thinning::getImgSkeletonInverted() const
 {
-	return imgSkeletonInverted;
+	return m_imgSkeletonInverted;
 }

@@ -15,23 +15,23 @@ class GaborFilterMultiThread : public QObject
 public:
 	explicit GaborFilterMultiThread(QObject *parent = nullptr);
 
-	void setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams);
+	void setParams(const cv::Mat &m_imgInput, const GABOR_PARAMS &gaborParams);
 	void enhance();
 
 	//getNset
 	cv::Mat getImgEnhanced() const;
 
 private:
-	int threadsFinished;
-	QVector<QThread*> threads; // vektor vlakien, ktore paralelne filtruju odtlacok
+	int m_threadsFinished;
+	QVector<QThread*> m_threads; // vektor vlakien, ktore paralelne filtruju odtlacok
 
 	// INPUT
-	cv::Mat imgInput;
+	cv::Mat m_imgInput;
 
-	GABOR_PARAMS gabor;
+	GABOR_PARAMS m_gabor;
 
 	// OUTPUT
-	cv::Mat imgEnhanced;
+	cv::Mat m_imgEnhanced;
 
 private slots:
 	void oneGaborThreadFinished(); // slot pre ukoncenie jedneho vlakna

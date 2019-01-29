@@ -74,42 +74,42 @@ public:
 	int setCPUOnly(bool enabled, int threadNum = 0);
 
 private:
-	ContrastEnhancement contrast;
-	OrientationMap oMap;
-	QualityMap qMap;
-	GaborFilterMultiThread gaborMultiThread; // objekt na paralelne filtrovanie odtlacku
-	GaborFilterGPU gaborGPU;
-	Binarization binarization;
-	Thinning thinning;
-	Mask mask;
-	FrequencyMap fMap;
+	ContrastEnhancement m_contrast;
+	OrientationMap m_oMap;
+	QualityMap m_qMap;
+	GaborFilterMultiThread m_gaborMultiThread; // objekt na paralelne filtrovanie odtlacku
+	GaborFilterGPU m_gaborGPU;
+	Binarization m_binarization;
+	Thinning m_thinning;
+	Mask m_mask;
+	FrequencyMap m_fMap;
 
-	QTime timer;
+	QTime m_timer;
 
-	bool preprocessingIsRunning;
+	bool m_preprocessingIsRunning;
 
 	// INPUT
-	INPUT_PARAMS inputParams;
+	INPUT_PARAMS m_inputParams;
 
 	// PARAMS
-	OMAP_PARAMS omapParams;
-	QMAP_PARAMS qmapParams;
-	FMAP_PARAMS fmapParams;
-	MASK_PARAMS maskParams;
-	CONTRAST_PARAMS contrastParams;
-	GABOR_PARAMS gaborParams;
-	BINARIZATION_PARAMS binarizationParams;
+	OMAP_PARAMS m_omapParams;
+	QMAP_PARAMS m_qmapParams;
+	FMAP_PARAMS m_fmapParams;
+	MASK_PARAMS m_maskParams;
+	CONTRAST_PARAMS m_contrastParams;
+	GABOR_PARAMS m_gaborParams;
+	BINARIZATION_PARAMS m_binarizationParams;
 
-	PREPROCESSING_FEATURES features;
-	PREPROCESSING_GENERAL general;
+	PREPROCESSING_FEATURES m_features;
+	PREPROCESSING_GENERAL m_general;
 
 	// OUTPUT
-	af::array orientationMapAF;
-	PREPROCESSING_ALL_RESULTS results;
-	QMap<QString, PREPROCESSING_RESULTS> resultsMap;
-	QMap<QString, PREPROCESSING_ALL_RESULTS> allResultsMap;
+	af::array m_orientationMapAF;
+	PREPROCESSING_ALL_RESULTS m_results;
+	QMap<QString, PREPROCESSING_RESULTS> m_resultsMap;
+	QMap<QString, PREPROCESSING_ALL_RESULTS> m_allResultsMap;
 
-	PREPROCESSING_DURATIONS durations;
+	PREPROCESSING_DURATIONS m_durations;
 
 	// PRIVATE FUNCTIONS
 	void continueAfterGabor();
@@ -123,13 +123,13 @@ private slots:
 	void allGaborThreadsFinished();
 
 signals:
-	void preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS results);
-	void preprocessingDoneSignal(PREPROCESSING_RESULTS results);
+	void preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS m_results);
+	void preprocessingDoneSignal(PREPROCESSING_RESULTS m_results);
 
-	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> results);
-	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> results);
+	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> m_results);
+	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> m_results);
 
-	void preprocessingDurationSignal(PREPROCESSING_DURATIONS durations);
+	void preprocessingDurationSignal(PREPROCESSING_DURATIONS m_durations);
 	void preprocessingProgressSignal(int progress);
 	void preprocessingErrorSignal(int errorcode);
 };

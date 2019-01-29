@@ -15,19 +15,19 @@ public:
 	cv::Mat getImgFrequencyMap() const;
 
 	void loadFrequencyMapModel(const CAFFE_FILES &freqFiles);
-	void setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmapParams);
+	void setParams(const cv::Mat &m_imgOriginal, const FMAP_PARAMS &fmapParams);
 
 	void generate();
 
 private:
-	PreprocessingCaffeNetwork *frequencyClassifier;
+	PreprocessingCaffeNetwork *m_frequencyClassifier;
 
-	cv::Mat imgOriginal;
-	FMAP_PARAMS fmap;
+	cv::Mat m_imgOriginal;
+	FMAP_PARAMS m_fmap;
 
-	cv::Mat frequencyMap;
+	cv::Mat m_frequencyMap;
 
-	bool isFrequencyModelLoaded;
+	bool m_isFrequencyModelLoaded;
 
 };
 
