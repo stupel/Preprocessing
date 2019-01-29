@@ -6,28 +6,28 @@
 
 class Mask : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit Mask(QObject *parent = nullptr);
+	explicit Mask(QObject *parent = nullptr);
 
-    cv::Mat getImgMask() const;
+	cv::Mat getImgMask() const;
 
-    void loadMaskModel(const CAFFE_FILES &maskFiles);
-    void setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams);
-    void generate();
+	void loadMaskModel(const CAFFE_FILES &maskFiles);
+	void setParams(const cv::Mat &imgOriginal, const MASK_PARAMS &maskParams);
+	void generate();
 
 private:
-    PreprocessingCaffeNetwork *maskClassifier;
+	PreprocessingCaffeNetwork *maskClassifier;
 
-    cv::Mat imgOriginal;
-    MASK_PARAMS mask;
+	cv::Mat imgOriginal;
+	MASK_PARAMS mask;
 
-    cv::Mat imgMask;
+	cv::Mat imgMask;
 
-    bool isMaskModelLoaded;
+	bool isMaskModelLoaded;
 
-    void smooth(QImage &smoothedMask, int maskBlockSize);
+	void smooth(QImage &smoothedMask, int maskBlockSize);
 
 };
 

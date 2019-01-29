@@ -49,56 +49,56 @@ typedef std::pair<string, float> Prediction;
 
 class PreprocessingCaffeNetwork : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    PreprocessingCaffeNetwork();
-    ~PreprocessingCaffeNetwork();
+	PreprocessingCaffeNetwork();
+	~PreprocessingCaffeNetwork();
 
-    std::vector<Prediction> classify(const cv::Mat img);
-    std::vector<vector<Prediction>> classifyBatch(const vector<cv::Mat> imgs, int num_classes);
+	std::vector<Prediction> classify(const cv::Mat img);
+	std::vector<vector<Prediction>> classifyBatch(const vector<cv::Mat> imgs, int num_classes);
 
-    bool getNetworkLoaded() const;
+	bool getNetworkLoaded() const;
 
-    void loadModel(const QString& model_file,
-                   const QString& trained_file,
-                   const QString& mean_file,
-                   const QString& label_file);
+	void loadModel(const QString& model_file,
+				   const QString& trained_file,
+				   const QString& mean_file,
+				   const QString& label_file);
 
 private:
-    QObject *parent;
+	QObject *parent;
 
-    std::shared_ptr<Net<float> > net_;
-    cv::Size input_geometry_;
-    int num_channels;
-    cv::Mat mean_;
-    std::vector<std::string> labels_;
-    int batchSize;
+	std::shared_ptr<Net<float> > net_;
+	cv::Size input_geometry_;
+	int num_channels;
+	cv::Mat mean_;
+	std::vector<std::string> labels_;
+	int batchSize;
 
-    bool networkLoaded;
+	bool networkLoaded;
 
-    void setMean(const std::string& mean_file);
-    std::vector<float> predict(const cv::Mat& img);
-    std::vector<float> predictBatch(const vector< cv::Mat > imgs);
-    void wrapInputLayer(std::vector<cv::Mat>* input_channels);
-    void wrapBatchInputLayer(std::vector<std::vector<cv::Mat> > *input_batch);
-    void preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels);
-    void preprocessBatch(const vector<cv::Mat> imgs, std::vector< std::vector<cv::Mat> >* input_batch);
-    void computeImageMean(const QString &outputDir, QString setName, int totalCount);
-    void trainNetwork();
-    void trainNetworkWithExe(const QString &outputDir);
-    static std::vector<int> caffeArgmax(const std::vector<float>& v, int N);
-    static bool caffePairCompare(const std::pair<float, int>& lhs, const std::pair<float, int>& rhs);
+	void setMean(const std::string& mean_file);
+	std::vector<float> predict(const cv::Mat& img);
+	std::vector<float> predictBatch(const vector< cv::Mat > imgs);
+	void wrapInputLayer(std::vector<cv::Mat>* input_channels);
+	void wrapBatchInputLayer(std::vector<std::vector<cv::Mat> > *input_batch);
+	void preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels);
+	void preprocessBatch(const vector<cv::Mat> imgs, std::vector< std::vector<cv::Mat> >* input_batch);
+	void computeImageMean(const QString &outputDir, QString setName, int totalCount);
+	void trainNetwork();
+	void trainNetworkWithExe(const QString &outputDir);
+	static std::vector<int> caffeArgmax(const std::vector<float>& v, int N);
+	static bool caffePairCompare(const std::pair<float, int>& lhs, const std::pair<float, int>& rhs);
 
-    static void get_gpus(vector<int>* gpus);
-    std::vector<string> get_stages_from_flags();
-    caffe::SolverAction::Enum GetRequestedAction(const std::string& flag_value);
-    void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list);
+	static void get_gpus(vector<int>* gpus);
+	std::vector<string> get_stages_from_flags();
+	caffe::SolverAction::Enum GetRequestedAction(const std::string& flag_value);
+	void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list);
 
 signals:
-    void logSignal(QString, QString);
-    void updateProgressBarSignal(QString, int, QString);
-    void trainingDoneSignal();
+	void logSignal(QString, QString);
+	void updateProgressBarSignal(QString, int, QString);
+	void trainingDoneSignal();
 };
 
 #endif // PREPROCESSING_CAFFENETWORK_H

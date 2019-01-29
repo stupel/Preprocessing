@@ -5,35 +5,35 @@
 
 class GaborFilterGPU : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    GaborFilterGPU();
+	GaborFilterGPU();
 
-    void setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams);
-    void enhanceWithBasicOMap();
-    void enhanceWithAdvancedOMap();
+	void setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams);
+	void enhanceWithBasicOMap();
+	void enhanceWithAdvancedOMap();
 
-    //getNset
-    cv::Mat getImgEnhanced() const;
-    float getDuration() const;
+	//getNset
+	cv::Mat getImgEnhanced() const;
+	float getDuration() const;
 
 
 private:
 
-    // INPUT
-    af::array imgInput;
-    af::array oMap;
-    af::array fMap;
+	// INPUT
+	af::array imgInput;
+	af::array oMap;
+	af::array fMap;
 
-    GABOR_PARAMS gabor;
+	GABOR_PARAMS gabor;
 
-    // OUTPUT
-    cv::Mat imgEnhanced;
-    float duration;
+	// OUTPUT
+	cv::Mat imgEnhanced;
+	float duration;
 
-    // PRIVATE FUNCTIONS
-    af::array getGaborKernel(const af::array &oMapPixel);
+	// PRIVATE FUNCTIONS
+	af::array getGaborKernel(const af::array &oMapPixel);
 };
 
 #endif // GABORFILTERGPU_H
