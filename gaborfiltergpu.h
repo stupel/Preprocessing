@@ -14,13 +14,13 @@ public:
 	void enhanceWithBasicOMap();
 	void enhanceWithAdvancedOMap();
 
-	//getNset
 	cv::Mat getImgEnhanced() const;
 	float getDuration() const;
 
+private:
+	af::array getGaborKernel(const af::array &oMapPixel);
 
 private:
-
 	// INPUT
 	af::array m_imgInput;
 	af::array m_oMap;
@@ -31,9 +31,6 @@ private:
 	// OUTPUT
 	cv::Mat m_imgEnhanced;
 	float m_duration;
-
-	// PRIVATE FUNCTIONS
-	af::array getGaborKernel(const af::array &oMapPixel);
 };
 
 #endif // GABORFILTERGPU_H

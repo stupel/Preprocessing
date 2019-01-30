@@ -23,9 +23,8 @@ private:
 	PreprocessingCaffeNetwork *m_frequencyClassifier;
 
 	cv::Mat m_imgOriginal;
-	FMAP_PARAMS m_fmap;
-
 	cv::Mat m_frequencyMap;
+	FMAP_PARAMS m_fmap;
 
 	bool m_isFrequencyModelLoaded;
 

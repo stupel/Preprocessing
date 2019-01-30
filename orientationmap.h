@@ -17,14 +17,12 @@ public:
 	void computeAdvancedMapGPU();
 	void drawBasicMap(const cv::Mat &imgOriginal);
 
-	//getNset
 	cv::Mat getOMap_advanced() const;
 	cv::Mat getOMap_basic() const;
 	cv::Mat getImgOMap_basic() const;
 	float getDuration() const;
 	af::array getOMapAF_basic() const;
 	af::array getOMapAF_advanced() const;
-
 
 private:
 	QTime m_timer;

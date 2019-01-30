@@ -66,17 +66,6 @@ public:
 				   const QString& label_file);
 
 private:
-	QObject *m_parent;
-
-	std::shared_ptr<Net<float> > m_net_;
-	cv::Size m_input_geometry_;
-	int m_num_channels;
-	cv::Mat m_mean_;
-	std::vector<std::string> m_labels_;
-	int m_batchSize;
-
-	bool m_networkLoaded;
-
 	void setMean(const std::string& mean_file);
 	std::vector<float> predict(const cv::Mat& img);
 	std::vector<float> predictBatch(const vector< cv::Mat > imgs);
@@ -99,6 +88,18 @@ signals:
 	void logSignal(QString, QString);
 	void updateProgressBarSignal(QString, int, QString);
 	void trainingDoneSignal();
+
+private:
+	QObject *m_parent;
+
+	std::shared_ptr<Net<float> > m_net_;
+	cv::Size m_input_geometry_;
+	int m_num_channels;
+	cv::Mat m_mean_;
+	std::vector<std::string> m_labels_;
+	int m_batchSize;
+
+	bool m_networkLoaded;
 };
 
 #endif // PREPROCESSING_CAFFENETWORK_H

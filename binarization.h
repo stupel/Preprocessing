@@ -20,17 +20,15 @@ public:
 	cv::Mat getImgBinarized() const;
 
 private:
+	void deleteBackground();
 
+private:
 	// INPUT
 	cv::Mat m_imgEnhanced;
 	BINARIZATION_PARAMS m_binarization;
 
 	// OUTPUT
 	cv::Mat m_imgBinarized;
-
-
-	// PRIVATE FUNCTIONS
-	void deleteBackground();
 };
 
 

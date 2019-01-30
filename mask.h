@@ -18,16 +18,16 @@ public:
 	void generate();
 
 private:
+	void smooth(QImage &smoothedMask, int maskBlockSize);
+
+private:
 	PreprocessingCaffeNetwork *m_maskClassifier;
 
 	cv::Mat m_imgOriginal;
+	cv::Mat m_imgMask;
 	MASK_PARAMS m_mask;
 
-	cv::Mat m_imgMask;
-
 	bool m_isMaskModelLoaded;
-
-	void smooth(QImage &smoothedMask, int maskBlockSize);
 
 };
 

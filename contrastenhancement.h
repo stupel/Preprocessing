@@ -18,6 +18,7 @@ public:
 private:
 	void performSuace();
 
+private:
 	cv::Mat m_imgOriginal;
 	CONTRAST_PARAMS m_contrast;
 

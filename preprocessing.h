@@ -73,6 +73,28 @@ public:
 	int setMaskParams(CAFFE_FILES maskFiles, int blockSize, int exBlockSize, bool useSmooth);
 	int setCPUOnly(bool enabled, int threadNum = 0);
 
+private slots:
+	void allGaborThreadsFinished();
+
+signals:
+	void preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS m_results);
+	void preprocessingDoneSignal(PREPROCESSING_RESULTS m_results);
+
+	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> m_results);
+	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> m_results);
+
+	void preprocessingDurationSignal(PREPROCESSING_DURATIONS m_durations);
+	void preprocessingProgressSignal(int progress);
+	void preprocessingErrorSignal(int errorcode);
+
+private:
+	void continueAfterGabor();
+	void preprocessingError(int errorcode);
+	void cleanResults();
+	void cleanInput();
+	void cleanDurations();
+	void startProcess(const cv::Mat &imgOriginal);
+
 private:
 	ContrastEnhancement m_contrast;
 	OrientationMap m_oMap;
@@ -110,28 +132,6 @@ private:
 	QMap<QString, PREPROCESSING_ALL_RESULTS> m_allResultsMap;
 
 	PREPROCESSING_DURATIONS m_durations;
-
-	// PRIVATE FUNCTIONS
-	void continueAfterGabor();
-	void preprocessingError(int errorcode);
-	void cleanResults();
-	void cleanInput();
-	void cleanDurations();
-	void startProcess(const cv::Mat &imgOriginal);
-
-private slots:
-	void allGaborThreadsFinished();
-
-signals:
-	void preprocessingDoneSignal(PREPROCESSING_ALL_RESULTS m_results);
-	void preprocessingDoneSignal(PREPROCESSING_RESULTS m_results);
-
-	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_ALL_RESULTS> m_results);
-	void preprocessingSequenceDoneSignal(QMap<QString, PREPROCESSING_RESULTS> m_results);
-
-	void preprocessingDurationSignal(PREPROCESSING_DURATIONS m_durations);
-	void preprocessingProgressSignal(int progress);
-	void preprocessingErrorSignal(int errorcode);
 };
 
 #endif // PREPROCESSING_H

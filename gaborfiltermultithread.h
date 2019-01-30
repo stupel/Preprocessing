@@ -18,8 +18,13 @@ public:
 	void setParams(const cv::Mat &m_imgInput, const GABOR_PARAMS &gaborParams);
 	void enhance();
 
-	//getNset
 	cv::Mat getImgEnhanced() const;
+
+private slots:
+	void oneGaborThreadFinished(); // slot pre ukoncenie jedneho vlakna
+
+signals:
+	void gaborThreadsFinished();
 
 private:
 	int m_threadsFinished;
@@ -32,13 +37,6 @@ private:
 
 	// OUTPUT
 	cv::Mat m_imgEnhanced;
-
-private slots:
-	void oneGaborThreadFinished(); // slot pre ukoncenie jedneho vlakna
-
-signals:
-	void gaborThreadsFinished();
-
 };
 
 #endif // GABORFILTERMULTITHREAD_H
