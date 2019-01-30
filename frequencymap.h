@@ -6,28 +6,27 @@
 
 class FrequencyMap : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit FrequencyMap(QObject *parent = nullptr);
+	explicit FrequencyMap(QObject *parent = nullptr);
 
-    cv::Mat getFrequencyMap() const;
-    cv::Mat getImgFrequencyMap() const;
+	cv::Mat getFrequencyMap() const;
+	cv::Mat getImgFrequencyMap() const;
 
-    void loadFrequencyMapModel(const CAFFE_FILES &freqFiles);
-    void setParams(const cv::Mat &imgOriginal, const FMAP_PARAMS &fmapParams);
+	void loadFrequencyMapModel(const CAFFE_FILES &freqFiles);
+	void setParams(const cv::Mat &m_imgOriginal, const FMAP_PARAMS &fmapParams);
 
-    void generate();
+	void generate();
 
 private:
-    PreprocessingCaffeNetwork *frequencyClassifier;
+	PreprocessingCaffeNetwork *m_frequencyClassifier;
 
-    cv::Mat imgOriginal;
-    FMAP_PARAMS fmap;
+	cv::Mat m_imgOriginal;
+	cv::Mat m_frequencyMap;
+	FMAP_PARAMS m_fmap;
 
-    cv::Mat frequencyMap;
-
-    bool isFrequencyModelLoaded;
+	bool m_isFrequencyModelLoaded;
 
 };
 

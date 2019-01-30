@@ -5,32 +5,30 @@
 
 class Binarization : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit Binarization(QObject *parent = nullptr);
+	explicit Binarization(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams);
-    void binarizeCPU();
-    void binarizeGPU();
-    void binarizeGaussianBlur();
-    void binarizeAdaptive();
-    void removeHoles(double holeSize);
+	void setParams(const cv::Mat &imgEnhanced, const BINARIZATION_PARAMS &binarizationParams);
+	void binarizeCPU();
+	void binarizeGPU();
+	void binarizeGaussianBlur();
+	void binarizeAdaptive();
+	void removeHoles(double holeSize);
 
-    cv::Mat getImgBinarized() const;
+	cv::Mat getImgBinarized() const;
 
 private:
+	void deleteBackground();
 
-    // INPUT
-    cv::Mat imgEnhanced;
-    BINARIZATION_PARAMS binarization;
+private:
+	// INPUT
+	cv::Mat m_imgEnhanced;
+	BINARIZATION_PARAMS m_binarization;
 
-    // OUTPUT
-    cv::Mat imgBinarized;
-
-
-    // PRIVATE FUNCTIONS
-    void deleteBackground();
+	// OUTPUT
+	cv::Mat m_imgBinarized;
 };
 
 

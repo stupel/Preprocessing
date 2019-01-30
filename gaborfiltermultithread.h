@@ -10,35 +10,33 @@ Q_DECLARE_METATYPE(cv::Rect)
 
 class GaborFilterMultiThread : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit GaborFilterMultiThread(QObject *parent = nullptr);
+	explicit GaborFilterMultiThread(QObject *parent = nullptr);
 
-    void setParams(const cv::Mat &imgInput, const GABOR_PARAMS &gaborParams);
-    void enhance();
+	void setParams(const cv::Mat &m_imgInput, const GABOR_PARAMS &gaborParams);
+	void enhance();
 
-    //getNset
-    cv::Mat getImgEnhanced() const;
-
-private:
-    int threadsFinished;
-    QVector<QThread*> threads; // vektor vlakien, ktore paralelne filtruju odtlacok
-
-    // INPUT
-    cv::Mat imgInput;
-
-    GABOR_PARAMS gabor;
-
-    // OUTPUT
-    cv::Mat imgEnhanced;
+	cv::Mat getImgEnhanced() const;
 
 private slots:
-    void oneGaborThreadFinished(); // slot pre ukoncenie jedneho vlakna
+	void oneGaborThreadFinished(); // slot pre ukoncenie jedneho vlakna
 
 signals:
-    void gaborThreadsFinished();
+	void gaborThreadsFinished();
 
+private:
+	int m_threadsFinished;
+	QVector<QThread*> m_threads; // vektor vlakien, ktore paralelne filtruju odtlacok
+
+	// INPUT
+	cv::Mat m_imgInput;
+
+	GABOR_PARAMS m_gabor;
+
+	// OUTPUT
+	cv::Mat m_imgEnhanced;
 };
 
 #endif // GABORFILTERMULTITHREAD_H
